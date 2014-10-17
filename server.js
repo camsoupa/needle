@@ -7,6 +7,23 @@ var fs = require('fs'),
 
 var port = 3000;
 var app = express();
+
+function syntaxHighlightCode(filetype, code) {
+  var rawLines = code.split('\n')
+  var outLines = [];
+  var cont;
+  _.forEach(rawLines, function (ln) {   
+    if (!ln.match(/^\s*$/)) {
+      var result = hl.highlight(filetype, ln, false, cont);
+      cont = result.continutation;
+      outLines.push({text: ln, html: '<pre class="source-code">' + result.value })
+    } else {
+      outLines.push({text: ln, html: '<pre class="source-code"><br>' })
+    }
+  });
+  return outLines;
+}
+
 app.use(express.static(__dirname + '/public'));
 
 app.get("/", function(req, res){
@@ -18,28 +35,19 @@ app.get('/file/:path', function (req, res) {
   var app = 'Memotis'; // TODO accept an app param
   fs.readFile('data/apps/source/' + app + '/src/' + req.params.path.replace(/\./g, '/') + '.java', 
     { encoding: 'utf-8' }, 
-    function (err, data) {
+    function (err, data) { 
+      if (!!err) throw err;
+      res.send({ filename: filename, lines: syntaxHighlightCode('java', data) });
+    });
+}) 
 
-      if(err) throw err;
-
-      var lines = data.split('\n')
-      
-      var outLines = [];
-      var cont;
-      _.forEach(lines, function (ln) {   
-        if (!ln.match(/^\s*$/)) {
-          var result = hl.highlight('java', ln, false, cont);
-          cont = result.continutation;
-          outLines.push({text: ln, html: '<pre class="source-code">' + result.value })
-        } else {
-          outLines.push({text: ln, html: '<pre class="source-code"><br>' })
-        }
-      })
-
-      res.send({
-        filename: req.params.path,
-        lines: outLines
-      })
+app.get('/manifest/:app', function (req, res) {
+  var app = 'Memotis'; // TODO accept an app param
+  var filename = 'AndroidManifest.xml';
+  fs.readFile('data/apps/source/' + app + '/' + filename, { encoding: 'utf-8' }, 
+    function (err, data) { 
+      if (!!err) throw err;
+      res.send({ filename: filename, lines: syntaxHighlightCode('xml', data) });
     });
 }) 
 
