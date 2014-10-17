@@ -33,7 +33,7 @@ app.get("/", function(req, res){
 
 // TODO memoizing to speed up
 app.get('/file/:path', function (req, res) {
-  var app = 'Memotis'; // TODO accept an app param
+  var app = 'AWeather'; // TODO accept an app param
   fs.readFile('data/apps/source/' + app + '/src/' + req.params.path.replace(/\./g, '/') + '.java', 
     { encoding: 'utf-8' }, 
     function (err, data) { 
@@ -61,7 +61,7 @@ app.get('/callgraph/:app', function (req, res) {
     res.send(graphCache[app]);
   } else {
     // TODO: readdir recursively
-    getCallGraph('data/apps/compiled/' + app + '/org/memotis/', function (graph) {
+    getCallGraph('data/apps/compiled/' + app + '/', function (graph) {
       graphCache[app] = graph;
       res.send(graph);
     });
