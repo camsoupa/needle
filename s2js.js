@@ -1,6 +1,7 @@
 var fs = require('fs'),
     parse = require('sexpression').parse,
-    _ = require('lodash');
+    _ = require('lodash'),
+    find = require('recursive-readdir');
 
 var NOT_NULL = function (m) { return !!m; };
 
@@ -197,8 +198,9 @@ function readSourcesAndSinks(onComplete) {
 }
 
 exports.getCallGraph = function (path, onComplete) {
-  fs.readdir(path, function (err, files) {
-    processFiles(_.map(files, function (f) { return path + f; }), null, onComplete);
+  find(path, function (err, files) {
+    if(!!err) throw err;
+    processFiles(files, null, onComplete);
   })
 }
 

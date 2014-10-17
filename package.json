@@ -13,11 +13,12 @@
   "dependencies": {
     "highlight.js": "8.3",
     "lodash": "2.4.1",
-    "express": "*",
+    "express": "4.9.7",
     "socket.io": "*",
     "dagre-d3" : "*",
     "d3" : "*",
     "sparkler" : "*",
+    "recursive-readdir" : "1.2.0",
     "sexpression" : "git+https://github.com/camsoupa/sexpression.git#master"
   },
   "license": "MIT"
