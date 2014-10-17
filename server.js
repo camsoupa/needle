@@ -4,7 +4,7 @@ var fs = require('fs'),
     hl = require('highlight.js'),
     _  = require('lodash'),
     fs = require('fs'),
-    getCallGraph = require('./_s2js.js').getCallGraph;
+    getCallGraph = require('./compiled/_s2js.js').getCallGraph;
 
 var port = 3000;
 var app = express();
