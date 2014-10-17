@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+  <head>
+
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/bootstrap-theme.css">
+    <link rel="stylesheet" href="css/angular-ui-tree.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/angucomplete.css">
+    <link rel="stylesheet" href="css/ui-layout.css">
+    <link rel="stylesheet" href="css/xcode.css">
+    <script src="js/raf.js"></script>
+    <script src="js/d3.js"></script>
+    <script src="js/dagre-d3.js"></script>
+    <script src="js/angular.min.js"></script>
+    <script src="js/angular-sanitize.js"></script>
+    <script src="js/angular-ui-router.min.js"></script>
+    <script src="js/angular-ui-tree.js"></script>
+    <script src="js/angucomplete.js"></script>
+    <script src="js/ui-layout.js"></script>
+    <script src="app.js"></script>
+    <script src="controllers/callgraph.js"></script>
+    <script src="controllers/calltree.js"></script>
+    <script src="controllers/code.js"></script>
+    <script src="directives/tabs.js"></script>
+    <title>needle</title>
+  </head>     
+  <body ng-app="needle">
+
+    <div ui-layout options="{ flow : 'row', 'dividerSize' : '5px' }">
+      <header size="30px" min-size="30px"  max-size="30px" style="background: #ddd;"></header>
+      <ui-layout style="overflow: hidden !important; background: #ddd;" options="{ flow : 'column', 'dividerSize' : '5px' }">
+         <div size="20%" ng-controller="calltree" style="margin: 7px;">
+            <div ui-layout options="{ flow : 'row', 'dividerSize' : '5px' }">
+              <input ng-model="pattern" placeholder="filter..." style="width: 100%;" size="40px" max-size="40px" min-size="40px" class="form-control form-control-small">
+              <div ui-tree data-drag-enabled="false" id="tree-root" style="margin-top: 5px;">
+                <ol ui-tree-nodes="" ng-model="data" ng-class="{hidden: collapsed}">
+                  <li ui-tree-node ng-repeat="pkg in pkgs" ng-hide="filter(pkg, pattern)">
+                    <div ui-tree-handle class="tree-node tree-node-content">
+                        <span class="glyphicon glyphicon-folder-open text-success" ng-click="toggle(this)">
+                        </span>
+                      {{pkg.title}}
+                    </div>
+                    <ol ui-tree-nodes="" ng-model="pkg.items" ng-class="{hidden: collapsed}">
+                      <li ui-tree-node ng-repeat="clazz in pkg.items" ng-hide="filter(clazz, pattern)">
+                        <div ui-tree-handle class="tree-node tree-node-content">
+                            <span class="glyphicon glyphicon-file text-primary" ng-click="toggle(this)">
+                            </span>
+                          {{clazz.title}}
+                        </div>
+                        <ol ui-tree-nodes="" ng-model="clazz.items" ng-class="{hidden: collapsed}">
+                          <li ui-tree-node ng-repeat="method in clazz.items" ng-hide="filter(method, pattern)">
+                            <div ui-tree-handle class="tree-node tree-node-content" ng-click="onMethodClicked(method)">
+                                <span class="glyphicon glyphicon-flash text-warning" ng-click="toggle(this)">
+                                </span>
+                              {{method.title}}
+                            </div>
+                            <ol ui-tree-nodes="" ng-model="method.items" ng-class="{hidden: collapsed}">
+                              <li ui-tree-node ng-repeat="risk in method.items" ng-hide="filter(risk, pattern)">
+                                <div ui-tree-handle class="tree-node tree-node-content" ng-click="onRiskClicked(risk)">
+                                    <span class="glyphicon glyphicon-exclamation-sign text-danger">
+                                    </span>
+                                  {{risk.title}}
+                                </div>
+                              </li>
+                            </ol>
+                          </li>
+                        </ol>
+                      </li>
+                    </ol>
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+      <ui-layout options="{ flow : 'row', 'dividerSize' : '5px' }">
+
+        <div ng-controller="code" style="background-color: #ccc; margin-top: 5px; margin-left: 7px;" ng-class="{ 'source-code-empty' : !file }">
+          <div ng-model="file" style="font-family: Menlo, Monaco, Consolas, 'Courier New', monospace; font-size: 13px;">
+            <div class="text-muted" style="position: fixed; background: #ccc; width: 60%;">{{file.filename}}</div>
+            <div style="height: 1px; width: 100%; background: #ccc;"></div>
+            <div style="margin-top: 20px">  
+              <div id="line-{{$index}}" ng-repeat="line in file.lines" class="source-code-line" ng-class="{ 'highlighted' : line.highlight }">
+                <div ng-bind-html="line.html"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer>
+          <div ng-controller="callgraph" class="container-fluid" style="background: #ccc; margin-top: 7px">
+            <div class="row">
+              <div class="col-md-12"><input type="checkbox" ng-model="showCallTree">show extended call tree</input></div>
+            </div>
+            <div class="row">
+              <div class="col-md-12"><dagre d3-graph="graph" d3-click="onClick(node)"></dagre></div>
+            </div>                          
+          </div>  
+        </footer>
+
+      </ui-layout>
+    </ui-layout>
+    </div>
+  </body>
+</html>

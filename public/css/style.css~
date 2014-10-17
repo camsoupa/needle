@@ -1,0 +1,104 @@
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+
+text {
+  font-weight: 300;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+  font-size: 14px;
+}
+
+#svg, #dagre {
+  overflow: hidden;
+  display:inline-block;
+}
+
+.source-code-empty {
+  background-image: url("/images/needle.png");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center; 
+}
+
+.source-code-line:hover {
+    background: #ddd;
+}
+
+.source-code {
+  margin: 0px !important;
+  padding: 0px !important;
+  border: none;
+  background: none;
+}
+
+.source-code-line {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.highlighted {
+ background: #ffffcc; 
+}
+
+.node rect {
+  stroke: #333;
+  stroke-width: 1.5px;
+  fill: #fff;
+}
+
+.node rect:hover {
+  stroke: #333;
+  stroke-width: 3px;
+  fill: red;
+}
+
+.edgeLabel rect {
+  fill: #fff;
+}
+
+.edgePath {
+  stroke: #333;
+  stroke-width: 1.5px;
+  fill: none;
+}
+
+.edgePath:hover {
+  stroke: #333;
+  stroke-width: 3px;
+  fill: #333;
+}
+
+.btn {
+    margin-right: 8px;
+}
+
+.angular-ui-tree-handle {
+    background: #f8faff;
+    border: 1px solid #dae2ea;
+    color: #7c9eb2;
+    padding: 3px 3px;
+}
+
+.angular-ui-tree-handle:hover {
+    color: #438eb9;
+    background: #f4f6f7;
+    border-color: #dce2e8;
+}
+
+.angular-ui-tree-placeholder {
+    background: #f0f9ff;
+    border: 2px dashed #bed2db;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+
+.group-title {
+    background-color: #687074 !important;
+    color: #FFF !important;
+}
+
+
