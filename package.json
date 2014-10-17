@@ -16,7 +16,8 @@
     "express": "*",
     "socket.io": "*",
     "dagre-d3" : "*",
-    "d3" : "*"
+    "d3" : "*",
+    "sparkler" : "*"
   },
   "license": "MIT"
 }

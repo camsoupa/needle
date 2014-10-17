@@ -1,6 +1,6 @@
 var myapp = angular.module('needle')
-  .controller('calltree', [ '$scope', '$rootScope',
-    function($scope, $rootScope) {
+  .controller('calltree', [ '$scope', '$rootScope', 'report',
+    function($scope, $rootScope, report) {
     // TODO make filterable with: https://github.com/ee/angular-ui-tree-filter
     $scope.pattern = '';
     $scope.toggle = function (scope) { scope.toggle(); }
@@ -23,73 +23,62 @@ var myapp = angular.module('needle')
       }
       return shouldHide;
     }
-    $scope.pkgs = [
-      {
-        "id": 1,
-        "title": "pkg1",
-        "items": [
-          {
-            "id": 11,
-            "title": "node1.1",
-            "items": [
-              {
-                "id": 111,
-                "title": "node1.1.1",
-                "items": [
-                  {
-                    "id": 111,
-                    "title": "risk",
-                    "filename" : "org.memotis.Crypto",
-                    "line" : 1
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "id": 12,
-            "title": "node1.2",
-            "items": []
+ 
+    function getPkg(clazz) {
+      var parts = clazz.split('/');
+      parts.pop();
+      return parts.join('.');
+    }
+
+    function getClassName(clazz) {
+      var parts = clazz.split('/');
+      return parts.pop();
+    }
+
+    function abbrev(str) {
+      return str.substring(0,10) + '...' + getClassName(str);
+    }
+
+    var id = 0;
+    var pkgs = {};
+    $scope.pkgs = [];
+    report.then(function (response) {
+      var prog = response.data;
+      for (var clazz in prog.classes) {
+        var pkg = getPkg(clazz);  
+        if (!(pkg in pkgs)) {
+          pkgs[pkg] = {
+            id: ++id,
+            title: ' ' + pkg,
+            items: []
+          };
+        }
+
+        var methodSigs = prog.classes[clazz].methods;
+        var methods = [];
+        for (var i = 0; i < methodSigs.length; i ++) {
+          var m = prog.methods[methodSigs[i]];
+          m.filename = pkg + '.' + prog.classes[clazz].file.replace('.java', '');
+          m.signature = methodSigs[i];
+          var risks = [];
+          if (m.risks) {
+            for(var j = 0; j < m.risks.length; j++) {
+              var r = m.risks[j];
+              r.filename = m.filename;
+              risks.push({ id: ++id, title: 'risk: ' + abbrev(r.name) + ' ' + r.category, data: r })
+            }     
           }
-        ]
-      },
-      {
-        "id": 2,
-        "title": "pkg2",
-        "items": [
-          {
-            "id": 21,
-            "title": "node2.1",
-            "items": []
-          },
-          {
-            "id": 22,
-            "title": "node2.2",
-            "items": []
-          }
-        ]
-      },
-      {
-        "id": 3,
-        "title": "node3",
-        "items": [
-          {
-            "id": 31,
-            "title": "node3.1",
-            "items": []
-          }
-        ]
-      },
-      {
-        "id": 4,
-        "title": "node4",
-        "items": [
-          {
-            "id": 41,
-            "title": "node4.1",
-            "items": []
-          }
-        ]
+          methods.push({ id: ++id, title: m.name, items: risks, data: m })
+        }
+        pkgs[pkg].items.push({
+          id: ++id,
+          title: getClassName(clazz),
+          items: methods
+        })
       }
-    ]
+      for (var pkg in pkgs) {
+        $scope.pkgs.push(pkgs[pkg]);
+      }
+      $scope.$apply();
+    })
    }])

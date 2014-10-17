@@ -89,7 +89,7 @@ function matchClass {
   * => null
 }
 
-var onFilesDone = function (classes) { 
+var onFilesDone = function (classes, onComplete) { 
   var methods = {};
   var outClasses = {};
 
@@ -107,7 +107,26 @@ var onFilesDone = function (classes) {
       outClasses[clazz.name].methods.push(sig);
     });
   });
-  console.log(JSON.stringify({classes: outClasses, methods: methods}, null, 2));
+
+  readSourcesAndSinks(function (sources, sinks) {
+    _.forEach(methods, function (m) {
+      _.forEach(m.calls, function (invoke) {
+        if (invoke.signature in sources) {
+          if(!(m.risks)) m.risks = [];
+          invoke.isSource = true;
+          invoke.category = sources[invoke.signature].category;
+          m.risks.push(invoke);
+        }
+        if (invoke.signature in sinks) {
+          if(!(m.risks)) m.risks = [];
+          invoke.isSink = true;
+          invoke.category = sinks[invoke.signature].category;
+          m.risks.push(invoke);
+        }
+      })
+    });
+    onComplete({classes: outClasses, methods: methods});
+  }); 
 }
 
 function getMethodSig(m) {
@@ -119,23 +138,68 @@ function getMethodSigFromInvoke(m) {
   return m.name.replace(/\//g, '.') + '(' + m.params.join(',') + ') => ' + m.ret; 
 }
 
-function processFiles(files, classes) {
+function processFiles(files, classes, onComplete) {
   if (!classes) classes = {};
   if (files.length) {
     console.log(_.last(files));
     fs.readFile(files.pop(), { encoding: 'utf-8' }, function (err, data) {
       var clazz = matchClass(parse(data));
       classes[clazz.name] = clazz;
-      processFiles(files, classes);   
+      processFiles(files, classes, onComplete);   
     });
   } else {
-    onFilesDone(classes);
+    onFilesDone(classes, onComplete);
   }
 }
 
-var path = process.argv[2];
-fs.readdir(path, function (err, files) {
-  processFiles(_.map(files, function (f) { return path + f; }));
-})
+var NOT_EMPTY = function (m) { return m != ''; };
+
+function parseSourceSinkLine(ln) {
+  var m = /\s*<([^:]*):\s(\S+)\s(\S+)\(([^)]*)\)>\s*\(([^)]+)\)\s*/.exec(ln);
+  if (m) {
+    m = m.slice(1); // matched groups 
+    return {
+      clazz: m[0],
+      ret:   m[1],
+      name:  m[2],
+      params: _.filter(m[3].split(','), NOT_EMPTY),
+      category: m[4] == 'NO_CATEGORY' ? 'SYSTEM' : m[4]
+    };
+  }
+}
+
+function parseSourceSinkList(path, onComplete) {
+  fs.readFile(path, { encoding: 'utf-8' }, function (err, data) {
+    if(!!err) throw err;
+    var lines = data.split('\n');
+    var parsed = _.chain(lines).map(parseSourceSinkLine).filter(NOT_NULL).value(); 
+    onComplete(parsed);
+  }) 
+}
+
+function readSourcesAndSinks(onComplete) {
+  parseSourceSinkList('data/sources_list', function (sources) {
+    parseSourceSinkList('data/sinks_list', function (sinks) {
+      var outSources = {};
+      var outSinks = {};
+
+      _.forEach(sources, function (src) {
+        outSources[getMethodSig(src)] = src;
+      })
+
+      _.forEach(sinks, function (sink) {
+        outSinks[getMethodSig(sink)] = sink;
+      })
+
+      onComplete(outSources, outSinks);
+    })
+  })
+}
+
+exports.getCallGraph = function (path, onComplete) {
+  fs.readdir(path, function (err, files) {
+    processFiles(_.map(files, function (f) { return path + f; }), null, onComplete);
+  })
+}
 
 

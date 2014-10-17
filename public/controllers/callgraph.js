@@ -1,6 +1,6 @@
 angular.module('needle')
-  .controller('callgraph', ['$scope', '$rootScope', '$http', '$timeout',
-    function($scope, $rootScope, $http, $timeout) {
+  .controller('callgraph', ['$scope', '$rootScope', '$http', '$timeout', 'report',
+    function($scope, $rootScope, $http, $timeout, report) {
 
       function getFullClassName(method) {
         var i = method.indexOf('(');
@@ -33,13 +33,13 @@ angular.module('needle')
 
       function calls(caller, callee) {
         for (var i = 0; i < caller.calls.length; i++) {
-          if (caller.calls[i].method == callee) { return true; }
+          if (caller.calls[i].signature == callee) { return true; }
         }
         return false;
       }
 
-      $http.get('controllers/call_graph.json').success(function (data) {        
-        var callers = data.call_graph;
+      report.then(function (response) {       
+        var callers = response.data.methods;
         
         var methods = {};
 
@@ -48,7 +48,7 @@ angular.module('needle')
         }
         for (var caller in callers) {
           for (var i = 0; i < callers[caller].calls.length; i++) {
-            var calleeName = callers[caller].calls[i].method;
+            var calleeName = callers[caller].calls[i].signature;
             var callee = methods[calleeName];
             if(callee == null) {
               callee = {name: calleeName, calls: 0, called: 1};
@@ -71,15 +71,15 @@ angular.module('needle')
           if (root) {
             for (var i = 0; i < root.calls.length; i++) { 
               var callee = root.calls[i];
-              var calleeClass = getClassName(callee.method);
-              var calleeMethodName = getMethodName(callee.method);
-              if (!g.hasNode(callee.method)) g.addNode(callee.method, { label: calleeClass + '.' + calleeMethodName });
-              g.addEdge(null, nodeId, callee.method);
-              if (!(callee.method in callers)) {
-                var leaf = 'leaf:' + callee.method;
+              var calleeClass = getClassName(callee.signature);
+              var calleeMethodName = getMethodName(callee.signature);
+              if (!g.hasNode(callee.signature)) g.addNode(callee.signature, { label: calleeClass + '.' + calleeMethodName });
+              g.addEdge(null, nodeId, callee.signature);
+              if (!(callee.signature in callers)) {
+                var leaf = 'leaf:' + callee.signature;
                 if (!g.hasNode(leaf)) {
                   g.addNode(leaf, { label: 'X' });
-                  g.addEdge(null, callee.method, leaf);
+                  g.addEdge(null, callee.signature, leaf);
                 }
               }
             }
@@ -102,8 +102,8 @@ angular.module('needle')
         }
 
         $scope.$watch('selectedMethod', function (value) {
-          if(value && value.title) {          
-            updateGraph(value.title);
+          if(value && value.data) {          
+            updateGraph(value.data.signature);
             $rootScope.$broadcast('graph_updated'); 
           }
         }, true)
@@ -116,7 +116,7 @@ angular.module('needle')
         }
 
         $scope.$on('method_request', function(evt, item){
-          $scope.onClick(item.title);
+          $scope.onClick(item.data.signature);
         });
         
       });

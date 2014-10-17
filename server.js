@@ -3,7 +3,8 @@ var fs = require('fs'),
     express = require('express'),
     hl = require('highlight.js'),
     _  = require('lodash'),
-    fs = require('fs');
+    fs = require('fs'),
+    getCallGraph = require('./_s2js.js').getCallGraph;
 
 var port = 3000;
 var app = express();
@@ -37,12 +38,12 @@ app.get('/file/:path', function (req, res) {
     { encoding: 'utf-8' }, 
     function (err, data) { 
       if (!!err) throw err;
-      res.send({ filename: filename, lines: syntaxHighlightCode('java', data) });
+      res.send({ filename: req.params.path, lines: syntaxHighlightCode('java', data) });
     });
 }) 
 
 app.get('/manifest/:app', function (req, res) {
-  var app = 'Memotis'; // TODO accept an app param
+  var app = req.params.app;
   var filename = 'AndroidManifest.xml';
   fs.readFile('data/apps/source/' + app + '/' + filename, { encoding: 'utf-8' }, 
     function (err, data) { 
@@ -50,6 +51,22 @@ app.get('/manifest/:app', function (req, res) {
       res.send({ filename: filename, lines: syntaxHighlightCode('xml', data) });
     });
 }) 
+
+var graphCache = {};
+
+app.get('/callgraph/:app', function (req, res) {
+  var app = req.params.app;
+  var filename = 'AndroidManifest.xml';
+  if (app in graphCache) {
+    res.send(graphCache[app]);
+  } else {
+    // TODO: readdir recursively
+    getCallGraph('data/apps/compiled/' + app + '/org/memotis/', function (graph) {
+      graphCache[app] = graph;
+      res.send(graph);
+    });
+  }
+});
 
 var io = require('socket.io').listen(app.listen(port));
 

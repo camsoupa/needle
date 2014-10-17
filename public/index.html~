@@ -19,6 +19,7 @@
     <script src="js/angucomplete.js"></script>
     <script src="js/ui-layout.js"></script>
     <script src="app.js"></script>
+    <script src="services/program-report-service.js"></script>
     <script src="controllers/callgraph.js"></script>
     <script src="controllers/calltree.js"></script>
     <script src="controllers/code.js"></script>
@@ -28,12 +29,12 @@
   <body ng-app="needle">
 
     <div ui-layout options="{ flow : 'row', 'dividerSize' : '5px' }">
-      <header size="30px" min-size="30px"  max-size="30px" style="background: #ddd;"></header>
+      <header size="30px" min-size="30px"  max-size="30px" style="background: #ddd; overflow: hidden; position: fixed;"><h4 style="margin-left: 10px;" class="text-danger"><a>apps</a> > <a>Memotis</a><h4></header>
       <ui-layout style="overflow: hidden !important; background: #ddd;" options="{ flow : 'column', 'dividerSize' : '5px' }">
          <div size="20%" ng-controller="calltree" style="margin: 7px;">
             <div ui-layout options="{ flow : 'row', 'dividerSize' : '5px' }">
               <input ng-model="pattern" placeholder="filter..." style="width: 100%;" size="40px" max-size="40px" min-size="40px" class="form-control form-control-small">
-              <div ui-tree data-drag-enabled="false" id="tree-root">
+              <div ui-tree data-drag-enabled="false" id="tree-root" style="margin-top: 5px;">
                 <ol ui-tree-nodes="" ng-model="data" ng-class="{hidden: collapsed}">
                   <li ui-tree-node ng-repeat="pkg in pkgs" ng-hide="filter(pkg, pattern)">
                     <div ui-tree-handle class="tree-node tree-node-content">
