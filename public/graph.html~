@@ -1,3 +1,0 @@
-
-<cytoscape cy-nodes="nodes" cy-edges="edges" cy-click="doClick(value)"></cytoscape>
-

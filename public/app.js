@@ -1,4 +1,4 @@
-angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', 'ngSanitize'])
+angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', 'ngSanitize', 'ui.bootstrap'])
   .config(function($logProvider){
       $logProvider.debugEnabled(true);
   })

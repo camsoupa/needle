@@ -16,6 +16,7 @@
     <script src="js/angular-sanitize.js"></script>
     <script src="js/angular-ui-router.min.js"></script>
     <script src="js/angular-ui-tree.js"></script>
+    <script src="js/ui-bootstrap.js"></script>
     <script src="js/angucomplete.js"></script>
     <script src="js/ui-layout.js"></script>
     <script src="app.js"></script>
@@ -31,11 +32,24 @@
     <div ui-layout options="{ flow : 'row', 'dividerSize' : '5px' }">
       <header size="30px" min-size="30px"  max-size="30px" style="background: #ddd; overflow: hidden; position: fixed;"><h4 style="margin-left: 10px;" class="text-danger"><a>apps</a> > <a>AWeather</a><h4></header>
       <ui-layout style="overflow: hidden !important; background: #ddd;" options="{ flow : 'column', 'dividerSize' : '5px' }">
-         <div size="35%" ng-controller="calltree" style="margin: 7px;">
-            <div ui-layout options="{ flow : 'row', 'dividerSize' : '5px' }">
-              <input ng-model="pattern" placeholder="filter..." style="width: 100%;" size="40px" max-size="40px" min-size="40px" class="form-control form-control-small">
-              <div ui-tree data-drag-enabled="false" id="tree-root" style="margin-top: 5px;">
-                <ol ui-tree-nodes="" ng-model="data" ng-class="{hidden: collapsed}">
+         <div size="35%" ng-controller="calltree" style="overflow: hidden; margin: 7px;" ng-class="{ 'tree-empty' : !pkgs }">
+
+              <div class="input-group">
+                <input ng-model="pattern" placeholder="filter..." class="form-control form-control-small">
+                <div class="btn-group input-group-btn" dropdown is-open="status.isopen">
+                  <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled">
+                    {{treeState + ' '}}<span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                    <li><a href="" ng-click="byRank()">Risks By Rank</a></li>
+                    <li><a href="" ng-click="byClass()">Risks By Class</a></li>
+                    <li><a href="" ng-click="byMethod()">Risks By Method</a></li>
+                  </ul>
+                </div>
+              </div><!-- /input-group -->
+
+              <div ui-tree data-drag-enabled="false" style="height: 93%; overflow-y: scroll; margin-top: 10px;" id="tree-root">
+                <ol ui-tree-nodes="" ng-model="data"  ng-class="{hidden: collapsed}">
                   <li ui-tree-node ng-repeat="pkg in pkgs" ng-hide="filter(pkg, pattern)">
                     <div ui-tree-handle class="tree-node tree-node-content">
                         <span class="glyphicon glyphicon-folder-open text-success" ng-click="toggle(this)">
@@ -73,7 +87,7 @@
                 </ol>
               </div>
             </div>
-          </div>
+
 
       <ui-layout options="{ flow : 'row', 'dividerSize' : '5px' }">
 

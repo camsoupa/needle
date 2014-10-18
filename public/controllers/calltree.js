@@ -3,6 +3,19 @@ var myapp = angular.module('needle')
     function($scope, $rootScope, report) {
     // TODO make filterable with: https://github.com/ee/angular-ui-tree-filter
     $scope.pattern = '';
+    $scope.treeState = 'By method';
+    $scope.byRank = function () { 
+      $scope.treeState = 'By rank'; 
+      // use states to transition to a sibling state - put tree into a template and load in ui-view as child state    
+    }
+    $scope.byClass = function () { 
+      $scope.treeState = 'By class'; 
+      // use states to transition to a sibling state - put tree into a template and load in ui-view as child state    
+    }
+    $scope.byMethod = function () { 
+      $scope.treeState = 'By method'; 
+      // use states to transition to a sibling state - put tree into a template and load in ui-view as child state    
+    }
     $scope.toggle = function (scope) { scope.toggle(); }
     $scope.onRiskClicked = function (item) { 
       console.log(item.title);
@@ -41,8 +54,9 @@ var myapp = angular.module('needle')
 
     var id = 0;
     var pkgs = {};
-    $scope.pkgs = [];
+    
     report.then(function (response) {
+      $scope.pkgs = [];
       var prog = response.data;
       for (var clazz in prog.classes) {
         var pkg = getPkg(clazz);  

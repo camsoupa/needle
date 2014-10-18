@@ -1,5 +1,9 @@
 .nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
 
+body {
+  height: 100%;
+}
+
 text {
   font-weight: 300;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
@@ -13,6 +17,18 @@ text {
 
 .source-code-empty {
   background-image: url("/images/needle.png");
+  background-repeat: no-repeat;
+  background-position: center; 
+}
+
+.tree-empty {
+  background-image: url("/images/loading.png");
+  background-repeat: no-repeat;
+  background-position: center; 
+}
+
+.source-code-empty:hover {
+  background-image: url("/images/needle-sword.png");
   background-repeat: no-repeat;
   background-position: center; 
 }
@@ -66,11 +82,7 @@ text {
 .edgePath:hover {
   stroke: #333;
   stroke-width: 3px;
-  fill: #333;
-}
-
-.btn {
-    margin-right: 8px;
+  fill: none;
 }
 
 .angular-ui-tree-handle {
