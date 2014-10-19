@@ -1,6 +1,24 @@
 angular.module('needle')
-  .controller('callgraph', ['$scope', '$rootScope', '$http', '$timeout', 'report',
-    function($scope, $rootScope, $http, $timeout, report) {
+  .controller('callgraph', ['$stateParams', '$scope', '$rootScope', '$http', '$timeout', 'report',
+    function($stateParams, $scope, $rootScope, $http, $timeout, report) {
+      console.log($stateParams);
+      $scope.graphType = 'Local callers/callees';
+      $scope.showSourceSinkOverviewGraph = function () {
+       $scope.graph = 'TypeSource/Sink overview'
+      }
+      $scope.showSourceSinksGraph = function () {
+        $scope.graphType = 'Reachable sources/sinks'
+      }
+      $scope.showNeighborGraph = function () {
+        $scope.graphType = 'Local callers/callees'
+      }
+
+      $scope.showCallGraph = function () {
+        $scope.graphType = 'Full call graph'
+      }
+      $scope.showClassGraph = function () {
+        $scope.graphType = 'Class relationships'
+      }
 
       function getFullClassName(method) {
         var i = method.indexOf('(');
@@ -25,12 +43,6 @@ angular.module('needle')
         return qualifiedMethod.substring(i+1); 
       }
 
-      function isLibCall(method) {
-        return method.indexOf('java.') == 0 || method.indexOf('android.') == 0 || 
-               method.indexOf('javax.') == 0 || method.indexOf('org.apache.') == 0 || 
-               method.indexOf('org.osmdroid') == 0;
-      }
-
       function calls(caller, callee) {
         for (var i = 0; i < caller.calls.length; i++) {
           if (caller.calls[i].signature == callee) { return true; }
@@ -38,7 +50,7 @@ angular.module('needle')
         return false;
       }
 
-      report.then(function (response) {       
+      report.get($stateParams.appName).then(function (response) {       
         var callers = response.data.methods;
         
         var methods = {};

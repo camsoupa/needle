@@ -1,6 +1,7 @@
 var myapp = angular.module('needle')
-  .controller('calltree', [ '$scope', '$rootScope', 'report',
-    function($scope, $rootScope, report) {
+  .controller('calltree', [ '$stateParams', '$scope', '$rootScope', 'report',
+    function($stateParams, $scope, $rootScope, report) {
+    console.log($stateParams);
     // TODO make filterable with: https://github.com/ee/angular-ui-tree-filter
     $scope.pattern = '';
     $scope.treeState = 'By method';
@@ -19,11 +20,11 @@ var myapp = angular.module('needle')
     $scope.toggle = function (scope) { scope.toggle(); }
     $scope.onRiskClicked = function (item) { 
       console.log(item.title);
-      $rootScope.$broadcast('risk_request', item);
+      $rootScope.$broadcast('risk_request', item, $stateParams.appName);
     }
     $scope.onMethodClicked = function (item) { 
       console.log(item.title);
-      $rootScope.$broadcast('method_request', item);
+      $rootScope.$broadcast('method_request', item, $stateParams.appName);
     }
     $scope.filter = function (item, pat) { 
       // TODO consider memoizing this func
@@ -55,7 +56,7 @@ var myapp = angular.module('needle')
     var id = 0;
     var pkgs = {};
     
-    report.then(function (response) {
+    report.get($stateParams.appName).then(function (response) {
       $scope.pkgs = [];
       var prog = response.data;
       for (var clazz in prog.classes) {

@@ -21,7 +21,7 @@ text {
   background-position: center; 
 }
 
-.tree-empty {
+.loading {
   background-image: url("/images/loading.png");
   background-repeat: no-repeat;
   background-position: center; 

@@ -1,0 +1,45 @@
+<div style="background: #ddd;">
+  <ui-layout style="overflow: hidden !important; background: #ddd;" options="{ flow : 'column', 'dividerSize' : '5px' }">
+    <div style="overflow: hidden; margin: 7px; background: #ddd;" > 
+
+    <div class="input-group">
+      <input ng-model="pattern" placeholder="filter..." class="form-control form-control-small">
+      <span class="input-group-btn">
+        <button class="btn btn-primary" type="button" ng-click="expandAll()">expand all</button>
+      </span>
+      <span class="input-group-btn">
+        <button class="btn btn-danger" type="button" ng-click="collapseAll()">collapse all</button>
+      </span>
+    </div ><!-- /input-group -->
+      <div ui-tree data-drag-enabled="false" style="height: 92%; overflow-y: scroll; margin-top: 10px;" id="apps-tree-root" ng-class="{ 'loading' : !apps }">
+        <ol ui-tree-nodes="" ng-model="data"  ng-class="{hidden: collapsed}">
+          <li ui-tree-node ng-repeat="app in apps" ng-hide="filter(app, pattern)">
+            <div ui-tree-handle class="tree-node tree-node-content">
+                <span class="glyphicon glyphicon-file text-success" ng-click="toggle(this)">
+                </span>
+              <a ui-sref="app({'appName': app.title})">{{app.title}}</a>
+            </div>
+            <ol ui-tree-nodes="" ng-model="app.items" ng-class="{hidden: collapsed}">
+              <li ui-tree-node ng-repeat="category in app.items" ng-hide="filter(category, pattern)">
+                <div ui-tree-handle class="tree-node tree-node-content">
+                    <span class="glyphicon glyphicon glyphicon-list-alt text-primary" ng-click="toggle(this)">
+                    </span>
+                  {{category.title}}
+                </div>
+                <ol ui-tree-nodes="" ng-model="category.items" ng-class="{hidden: collapsed}">
+                  <li ui-tree-node ng-repeat="item in category.items" ng-hide="filter(item, pattern)">
+                    <div ui-tree-handle class="tree-node tree-node-content" >
+                        <span class="glyphicon glyphicon glyphicon-cog text-danger" ng-click="toggle(this)">
+                        </span>
+                      {{item.title}}
+                    </div>
+                  </li>
+                </ol>
+              </li>
+            </ol>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </ui-layout>
+</div>

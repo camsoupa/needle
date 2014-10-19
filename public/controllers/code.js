@@ -11,7 +11,7 @@ angular.module('needle')
         return index;
       }
 
-      function highlightAndScrollToLine(data, lineOrMethodDef) {
+      function highlightAndScrollToLine (data, lineOrMethodDef) {
         var line = typeof lineOrMethodDef == 'number' ? lineOrMethodDef : getMethodDefLine(data.lines, lineOrMethodDef);
         if (line >= 0) data.lines[line].highlight = true;
         $scope.file = data;
@@ -21,21 +21,21 @@ angular.module('needle')
          }, 20);
       }
 
-      function showFile (path, line) {
+      function showFile (app, path, line) {
         if (path in filesCache) {
           highlightAndScrollToLine(filesCache[path], line);
         } else {
-          $http.get('file/' + path).success(function (data) {
+          $http.get('file', { params: { app: app, path: path }}).success(function (data) {
             filesCache[path] = data;
             highlightAndScrollToLine(data, line);
           });
         }
       }
 
-      $scope.$on('risk_request', function (evt, item) {
-        showFile(item.data.filename, item.data.line-1);
+      $scope.$on('risk_request', function (evt, item, app) {
+        showFile(app, item.data.filename, item.data.line-1);
       })
-      $scope.$on('method_request', function (evt, item) {
-        showFile(item.data.filename, item.data);
+      $scope.$on('method_request', function (evt, item, app) {
+        showFile(app, item.data.filename, item.data);
       })
     }])

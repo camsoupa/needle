@@ -19,7 +19,8 @@
     "d3" : "*",
     "sparkler" : "*",
     "recursive-readdir" : "1.2.0",
-    "sexpression" : "git+https://github.com/camsoupa/sexpression.git#master"
+    "sexpression" : "git+https://github.com/camsoupa/sexpression.git#master",
+    "xml2js" : "0.4.4"
   },
   "license": "MIT"
 }
