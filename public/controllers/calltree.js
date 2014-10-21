@@ -29,28 +29,40 @@ var myapp = angular.module('needle')
     $scope.filter = function (item, pat) { 
       // TODO consider memoizing this func
       if (pat == '') return false;
-      var shouldHide = item.title.indexOf(pat) == -1;
-      if (shouldHide && item.items != null) {
+
+      // show if an ancestor should show
+      var parent = item.parent;
+      while (parent) {
+        if(parent.title.indexOf(pat) >= 0) {
+          return false;
+        }
+        parent = parent.parent;
+      }
+
+      var shouldShow = item.title.indexOf(pat) >= 0;
+      // if this item does not match the pattern, check the children
+      // if a single child matches, show the item
+      if (!shouldShow && item.items != null) {
         for (var i = 0; i < item.items.length; i++) {
           if (!$scope.filter(item.items[i], pat)) return false;
         }
       }
-      return shouldHide;
+      return !shouldShow;
     }
  
     function getPkg(clazz) {
-      var parts = clazz.split('/');
+      var parts = clazz.split('.');
       parts.pop();
       return parts.join('.');
     }
 
     function getClassName(clazz) {
-      var parts = clazz.split('/');
+      var parts = clazz.split('.');
       return parts.pop();
     }
 
     function abbrev(str) {
-      return str.substring(0,10) + '...' + getClassName(str);
+      return str.split('.').slice(-2).join('.');
     }
 
     var id = 0;
@@ -68,28 +80,29 @@ var myapp = angular.module('needle')
             items: []
           };
         }
-
+        var classItem = {
+          id: ++id,
+          title: getClassName(clazz),
+          parent: pkgs[pkg],
+          items: []
+        }
         var methodSigs = prog.classes[clazz].methods;
-        var methods = [];
         for (var i = 0; i < methodSigs.length; i ++) {
           var m = prog.methods[methodSigs[i]];
           m.filename = pkg + '.' + prog.classes[clazz].file.replace('.java', '');
           m.signature = methodSigs[i];
-          var risks = [];
+          var method = { id: ++id, title: m.name, items: [], parent: classItem, data: m }
           if (m.risks) {
             for(var j = 0; j < m.risks.length; j++) {
               var r = m.risks[j];
               r.filename = m.filename;
-              risks.push({ id: ++id, title: 'risk: ' + abbrev(r.name) + ' ' + r.category, data: r })
+              var riskTitle =  (r.isSource ? 'SOURCE' : (r.isSink ? 'SINK' : '')) + ' ' + abbrev(r.name) + ' (' + r.category + ')';
+              method.items.push({ id: ++id, title: riskTitle, parent: method, data: r })
             }     
           }
-          methods.push({ id: ++id, title: m.name, items: risks, data: m })
+          classItem.items.push(method)
         }
-        pkgs[pkg].items.push({
-          id: ++id,
-          title: getClassName(clazz),
-          items: methods
-        })
+        pkgs[pkg].items.push(classItem)
       }
       for (var pkg in pkgs) {
         $scope.pkgs.push(pkgs[pkg]);

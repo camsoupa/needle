@@ -24,7 +24,7 @@ var S = {
 
 function matchType {
   [S('array'), type] => [ matchType(type) ],
-  [S('object'), S(className)] => className,
+  [S('object'), S(className)] => className.replace(/\//g, '.'),
   S(prim) => prim
 }
 
@@ -32,7 +32,7 @@ function matchStmt {
   [S(type), regs, S(name), params, ret] if !type.indexOf('invoke')  => {
     var invoke =  {
       type: type,
-      name: name,
+      name: name.replace(/\//g, '.'),
       params: _.map(params, matchType),
       ret: matchType(ret)
     };
@@ -74,6 +74,8 @@ function matchMethodDef {
 function matchClass {
   [S(type), [S('attrs'), ...attrs], S(clazz), [S('super'), S(parent)], [S('source'), file], ...members]  
     if (type === 'class' || type == 'interface') => {
+      clazz = clazz.replace(/\//g, '.');
+      parent = parent.replace(/\//g, '.');
       return {
         type: type,
         file: file,
@@ -85,7 +87,7 @@ function matchClass {
                   .filter(NOT_NULL)
                   .map(function (m) { m.clazz = clazz; m.file = file; return m; })
                   .value()
-      }
+      };
   }, 
   * => null
 }
@@ -96,11 +98,13 @@ var onFilesDone = function (classes, onComplete) {
 
   _.forEach(classes, function (clazz) {
     outClasses[clazz.name] = {
+      type: clazz.type,
       file: clazz.file,
-      name: clazz.clazz,
+      name: clazz.name,
       parent: clazz.parent,
       attrs: clazz.attrs,
-      methods: []
+      methods: [],
+      subClasses: []
     };
     _.forEach(clazz.methods, function (method) {
       var sig = getMethodSig(method);
@@ -108,9 +112,56 @@ var onFilesDone = function (classes, onComplete) {
       outClasses[clazz.name].methods.push(sig);
     });
   });
+  
+  /* put all parent classes into the outClasses - TODO should we pull in the source code too for java.util, etc? */
+  _.forEach(_.clone(outClasses), function (clazz) {
+    if(clazz.parent) {
+      if(!(clazz.parent in outClasses)) {
+        outClasses[clazz.parent] = {
+          name: clazz.parent,
+          external: true,
+          methods: [],
+          subClasses: [ clazz.name ]
+        }
+      } else {
+        outClasses[clazz.parent].subClasses.push(clazz.name);
+      }
+    } else {
+       console.log('NO PARENT FOR: ' + clazz.name);
+    }
+  });
+
+  /* TODO consider if all indirectSubclasses is really what we want */
+  function indirectSubclassesOf (className) {
+    if (!className || !(className in outClasses)) return []; /* i.e. - no known subclasses */
+    return _.flatten(outClasses[className].subClasses.concat(_.map(outClasses[className].subClasses, function (sub) { 
+        return indirectSubclassesOf(sub); 
+      })));
+  }
+
+  /* including direct and indirect subClasses in calls for invoke-virtual and invoke-interface */
+  _.forEach(methods, function (method, methodSig) {
+    _.forEach(method.calls, function (invoke) {
+      if (invoke.type == 'invoke-virtual' || invoke.type == 'invoke-interface') {
+        /* add known subTypes of the called class to the calls list */
+        var parentClass = invoke.name.split('.').slice(0,-1).join('.');
+        var methodName = invoke.name.split('.').pop();
+        _.forEach(indirectSubclassesOf(parentClass), function (subClass) { 
+          method.calls.push({
+            type: invoke.type,
+            name: [subClass, methodName].join('.'),
+            line: invoke.line,
+            params: invoke.params,
+            signature: invoke.signature.replace(parentClass, subClass),
+            isInferred: true
+          })
+        })
+      }    
+    })
+  })
 
   readSourcesAndSinks(function (sources, sinks) {
-    _.forEach(methods, function (m) {
+    _.forEach(methods, function (m, mSig) {
       _.forEach(m.calls, function (invoke) {
         if (invoke.signature in sources) {
           if(!(m.risks)) m.risks = [];
@@ -119,6 +170,7 @@ var onFilesDone = function (classes, onComplete) {
           m.risks.push(invoke);
         }
         if (invoke.signature in sinks) {
+
           if(!(m.risks)) m.risks = [];
           invoke.isSink = true;
           invoke.category = sinks[invoke.signature].category;
@@ -132,11 +184,11 @@ var onFilesDone = function (classes, onComplete) {
 
 function getMethodSig(m) {
   /*excluding because invoke stmts do not have attrs: m.attrs.join(' ') + ' ' + */
-  return [m.clazz.replace(/\//g, '.'), m.name].join('.') + '(' + m.params.join(',') + ') => ' + m.ret; 
+  return [m.clazz, m.name].join('.') + '(' + m.params.join(',') + ') => ' + m.ret; 
 }
 
 function getMethodSigFromInvoke(m) {
-  return m.name.replace(/\//g, '.') + '(' + m.params.join(',') + ') => ' + m.ret; 
+  return m.name + '(' + m.params.join(',') + ') => ' + m.ret; 
 }
 
 function processFiles(files, classes, onComplete) {
@@ -156,7 +208,7 @@ function processFiles(files, classes, onComplete) {
 var NOT_EMPTY = function (m) { return m != ''; };
 
 function parseSourceSinkLine(ln) {
-  var m = /\s*<([^:]*):\s(\S+)\s(\S+)\(([^)]*)\)>\s*\(([^)]+)\)\s*/.exec(ln);
+  var m = /\s*<([^:]*):\s(\S+)\s(\S+)\(([^)]*)\)>\s*((?:\S+\s+)*)\(([^)]+)\)\s*/.exec(ln);
   if (m) {
     m = m.slice(1); // matched groups 
     return {
@@ -164,8 +216,11 @@ function parseSourceSinkLine(ln) {
       ret:   m[1],
       name:  m[2],
       params: _.filter(m[3].split(','), NOT_EMPTY),
-      category: m[4] == 'NO_CATEGORY' ? 'SYSTEM' : m[4]
+      permissions: m[4].split(' '),
+      category: m[5].replace('NO_CATEGORY', 'GENERAL').replace('_INFORMATION', '').replace('SYNCHRONIZATION', 'SYNC')
     };
+  } else {
+      console.log("Ignoring source/sink line: " + ln)
   }
 }
 

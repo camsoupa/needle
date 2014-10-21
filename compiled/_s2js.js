@@ -39,7 +39,7 @@ function matchType$1709(a0$1748) {
                 var r4$1755 = S$1702.unapply(r3$1754);
                 if (r4$1755 != null && r4$1755.length === 1) {
                     var className$1756 = r4$1755[0];
-                    return className$1756;
+                    return className$1756.replace(/\//g, '.');
                 }
             }
         }
@@ -67,7 +67,7 @@ function matchStmt$1713(a0$1758) {
                     var ret$1767 = a0$1758[4];
                     var invoke$1768 = {
                             type: type$1763,
-                            name: name$1765,
+                            name: name$1765.replace(/\//g, '.'),
                             params: _$1698.map(params$1766, matchType$1709),
                             ret: matchType$1709(ret$1767)
                         };
@@ -210,6 +210,8 @@ function matchClass$1718(a0$1803) {
                                                                 var parent$1835 = r18$1822[0];
                                                                 var file$1836 = r19$1823[1];
                                                                 var members$1837 = r23$1827;
+                                                                clazz$1834 = clazz$1834.replace(/\//g, '.');
+                                                                parent$1835 = parent$1835.replace(/\//g, '.');
                                                                 return {
                                                                     type: type$1832,
                                                                     file: file$1836,
@@ -242,36 +244,87 @@ function matchClass$1718(a0$1803) {
 var onFilesDone$1721 = function (classes$1840, onComplete$1841) {
     var methods$1842 = {};
     var outClasses$1843 = {};
-    _$1698.forEach(classes$1840, function (clazz$1846) {
-        outClasses$1843[clazz$1846.name] = {
-            file: clazz$1846.file,
-            name: clazz$1846.clazz,
-            parent: clazz$1846.parent,
-            attrs: clazz$1846.attrs,
-            methods: []
+    _$1698.forEach(classes$1840, function (clazz$1850) {
+        outClasses$1843[clazz$1850.name] = {
+            type: clazz$1850.type,
+            file: clazz$1850.file,
+            name: clazz$1850.name,
+            parent: clazz$1850.parent,
+            attrs: clazz$1850.attrs,
+            methods: [],
+            subClasses: []
         };
-        _$1698.forEach(clazz$1846.methods, function (method$1848) {
-            var sig$1849 = getMethodSig$1723(method$1848);
-            methods$1842[sig$1849] = method$1848;
-            outClasses$1843[clazz$1846.name].methods.push(sig$1849);
+        _$1698.forEach(clazz$1850.methods, function (method$1852) {
+            var sig$1853 = getMethodSig$1723(method$1852);
+            methods$1842[sig$1853] = method$1852;
+            outClasses$1843[clazz$1850.name].methods.push(sig$1853);
         });
     });
-    readSourcesAndSinks$1734(function (sources$1850, sinks$1851) {
-        _$1698.forEach(methods$1842, function (m$1853) {
-            _$1698.forEach(m$1853.calls, function (invoke$1855) {
-                if (invoke$1855.signature in sources$1850) {
-                    if (!m$1853.risks)
-                        m$1853.risks = [];
-                    invoke$1855.isSource = true;
-                    invoke$1855.category = sources$1850[invoke$1855.signature].category;
-                    m$1853.risks.push(invoke$1855);
+    /* put all parent classes into the outClasses - TODO should we pull in the source code too for java.util, etc? */
+    _$1698.forEach(_$1698.clone(outClasses$1843), function (clazz$1854) {
+        if (clazz$1854.parent) {
+            if (!(clazz$1854.parent in outClasses$1843)) {
+                outClasses$1843[clazz$1854.parent] = {
+                    name: clazz$1854.parent,
+                    external: true,
+                    methods: [],
+                    subClasses: [clazz$1854.name]
+                };
+            } else {
+                outClasses$1843[clazz$1854.parent].subClasses.push(clazz$1854.name);
+            }
+        } else {
+            console.log('NO PARENT FOR: ' + clazz$1854.name);
+        }
+    });
+    /* TODO consider if all indirectSubclasses is really what we want */
+    function indirectSubclassesOf$1847(className$1855) {
+        if (!className$1855 || !(className$1855 in outClasses$1843))
+            return [];
+        /* i.e. - no known subclasses */
+        return _$1698.flatten(outClasses$1843[className$1855].subClasses.concat(_$1698.map(outClasses$1843[className$1855].subClasses, function (sub$1857) {
+            return indirectSubclassesOf$1847(sub$1857);
+        })));
+    }
+    /* including direct and indirect subClasses in calls for invoke-virtual and invoke-interface */
+    _$1698.forEach(methods$1842, function (method$1858, methodSig$1859) {
+        _$1698.forEach(method$1858.calls, function (invoke$1861) {
+            if (invoke$1861.type == 'invoke-virtual' || invoke$1861.type == 'invoke-interface') {
+                /* add known subTypes of the called class to the calls list */
+                var parentClass$1862 = invoke$1861.name.split('.').slice(0, -1).join('.');
+                var methodName$1863 = invoke$1861.name.split('.').pop();
+                _$1698.forEach(indirectSubclassesOf$1847(parentClass$1862), function (subClass$1865) {
+                    method$1858.calls.push({
+                        type: invoke$1861.type,
+                        name: [
+                            subClass$1865,
+                            methodName$1863
+                        ].join('.'),
+                        line: invoke$1861.line,
+                        params: invoke$1861.params,
+                        signature: invoke$1861.signature.replace(parentClass$1862, subClass$1865),
+                        isInferred: true
+                    });
+                });
+            }
+        });
+    });
+    readSourcesAndSinks$1734(function (sources$1866, sinks$1867) {
+        _$1698.forEach(methods$1842, function (m$1869, mSig$1870) {
+            _$1698.forEach(m$1869.calls, function (invoke$1872) {
+                if (invoke$1872.signature in sources$1866) {
+                    if (!m$1869.risks)
+                        m$1869.risks = [];
+                    invoke$1872.isSource = true;
+                    invoke$1872.category = sources$1866[invoke$1872.signature].category;
+                    m$1869.risks.push(invoke$1872);
                 }
-                if (invoke$1855.signature in sinks$1851) {
-                    if (!m$1853.risks)
-                        m$1853.risks = [];
-                    invoke$1855.isSink = true;
-                    invoke$1855.category = sinks$1851[invoke$1855.signature].category;
-                    m$1853.risks.push(invoke$1855);
+                if (invoke$1872.signature in sinks$1867) {
+                    if (!m$1869.risks)
+                        m$1869.risks = [];
+                    invoke$1872.isSink = true;
+                    invoke$1872.category = sinks$1867[invoke$1872.signature].category;
+                    m$1869.risks.push(invoke$1872);
                 }
             });
         });
@@ -281,75 +334,78 @@ var onFilesDone$1721 = function (classes$1840, onComplete$1841) {
         });
     });
 };
-function getMethodSig$1723(m$1856) {
+function getMethodSig$1723(m$1873) {
     /*excluding because invoke stmts do not have attrs: m.attrs.join(' ') + ' ' + */
     return [
-        m$1856.clazz.replace(/\//g, '.'),
-        m$1856.name
-    ].join('.') + '(' + m$1856.params.join(',') + ') => ' + m$1856.ret;
+        m$1873.clazz,
+        m$1873.name
+    ].join('.') + '(' + m$1873.params.join(',') + ') => ' + m$1873.ret;
 }
-function getMethodSigFromInvoke$1725(m$1857) {
-    return m$1857.name.replace(/\//g, '.') + '(' + m$1857.params.join(',') + ') => ' + m$1857.ret;
+function getMethodSigFromInvoke$1725(m$1874) {
+    return m$1874.name + '(' + m$1874.params.join(',') + ') => ' + m$1874.ret;
 }
-function processFiles$1726(files$1858, classes$1859, onComplete$1860) {
-    if (!classes$1859)
-        classes$1859 = {};
-    if (files$1858.length) {
-        console.log(_$1698.last(files$1858));
-        fs$1696.readFile(files$1858.pop(), { encoding: 'utf-8' }, function (err$1862, data$1863) {
-            var clazz$1864 = matchClass$1718(parse$1697(data$1863));
-            classes$1859[clazz$1864.name] = clazz$1864;
-            processFiles$1726(files$1858, classes$1859, onComplete$1860);
+function processFiles$1726(files$1875, classes$1876, onComplete$1877) {
+    if (!classes$1876)
+        classes$1876 = {};
+    if (files$1875.length) {
+        console.log(_$1698.last(files$1875));
+        fs$1696.readFile(files$1875.pop(), { encoding: 'utf-8' }, function (err$1879, data$1880) {
+            var clazz$1881 = matchClass$1718(parse$1697(data$1880));
+            classes$1876[clazz$1881.name] = clazz$1881;
+            processFiles$1726(files$1875, classes$1876, onComplete$1877);
         });
     } else {
-        onFilesDone$1721(classes$1859, onComplete$1860);
+        onFilesDone$1721(classes$1876, onComplete$1877);
     }
 }
-var NOT_EMPTY$1728 = function (m$1865) {
-    return m$1865 != '';
+var NOT_EMPTY$1728 = function (m$1882) {
+    return m$1882 != '';
 };
-function parseSourceSinkLine$1731(ln$1866) {
-    var m$1867 = /\s*<([^:]*):\s(\S+)\s(\S+)\(([^)]*)\)>\s*\(([^)]+)\)\s*/.exec(ln$1866);
-    if (m$1867) {
-        m$1867 = m$1867.slice(1);
+function parseSourceSinkLine$1731(ln$1883) {
+    var m$1884 = /\s*<([^:]*):\s(\S+)\s(\S+)\(([^)]*)\)>\s*((?:\S+\s+)*)\(([^)]+)\)\s*/.exec(ln$1883);
+    if (m$1884) {
+        m$1884 = m$1884.slice(1);
         // matched groups 
         return {
-            clazz: m$1867[0],
-            ret: m$1867[1],
-            name: m$1867[2],
-            params: _$1698.filter(m$1867[3].split(','), NOT_EMPTY$1728),
-            category: m$1867[4] == 'NO_CATEGORY' ? 'SYSTEM' : m$1867[4]
+            clazz: m$1884[0],
+            ret: m$1884[1],
+            name: m$1884[2],
+            params: _$1698.filter(m$1884[3].split(','), NOT_EMPTY$1728),
+            permissions: m$1884[4].split(' '),
+            category: m$1884[5].replace('NO_CATEGORY', 'GENERAL').replace('_INFORMATION', '').replace('SYNCHRONIZATION', 'SYNC')
         };
+    } else {
+        console.log('Ignoring source/sink line: ' + ln$1883);
     }
 }
-function parseSourceSinkList$1733(path$1868, onComplete$1869) {
-    fs$1696.readFile(path$1868, { encoding: 'utf-8' }, function (err$1871, data$1872) {
-        if (!!err$1871)
-            throw err$1871;
-        var lines$1873 = data$1872.split('\n');
-        var parsed$1874 = _$1698.chain(lines$1873).map(parseSourceSinkLine$1731).filter(NOT_NULL$1701).value();
-        onComplete$1869(parsed$1874);
+function parseSourceSinkList$1733(path$1885, onComplete$1886) {
+    fs$1696.readFile(path$1885, { encoding: 'utf-8' }, function (err$1888, data$1889) {
+        if (!!err$1888)
+            throw err$1888;
+        var lines$1890 = data$1889.split('\n');
+        var parsed$1891 = _$1698.chain(lines$1890).map(parseSourceSinkLine$1731).filter(NOT_NULL$1701).value();
+        onComplete$1886(parsed$1891);
     });
 }
-function readSourcesAndSinks$1734(onComplete$1875) {
-    parseSourceSinkList$1733('data/sources_list', function (sources$1877) {
-        parseSourceSinkList$1733('data/sinks_list', function (sinks$1879) {
-            var outSources$1880 = {};
-            var outSinks$1881 = {};
-            _$1698.forEach(sources$1877, function (src$1884) {
-                outSources$1880[getMethodSig$1723(src$1884)] = src$1884;
+function readSourcesAndSinks$1734(onComplete$1892) {
+    parseSourceSinkList$1733('data/sources_list', function (sources$1894) {
+        parseSourceSinkList$1733('data/sinks_list', function (sinks$1896) {
+            var outSources$1897 = {};
+            var outSinks$1898 = {};
+            _$1698.forEach(sources$1894, function (src$1901) {
+                outSources$1897[getMethodSig$1723(src$1901)] = src$1901;
             });
-            _$1698.forEach(sinks$1879, function (sink$1885) {
-                outSinks$1881[getMethodSig$1723(sink$1885)] = sink$1885;
+            _$1698.forEach(sinks$1896, function (sink$1902) {
+                outSinks$1898[getMethodSig$1723(sink$1902)] = sink$1902;
             });
-            onComplete$1875(outSources$1880, outSinks$1881);
+            onComplete$1892(outSources$1897, outSinks$1898);
         });
     });
 }
-exports.getCallGraph = function (path$1886, onComplete$1887) {
-    find$1699(path$1886, function (err$1889, files$1890) {
-        if (!!err$1889)
-            throw err$1889;
-        processFiles$1726(files$1890, null, onComplete$1887);
+exports.getCallGraph = function (path$1903, onComplete$1904) {
+    find$1699(path$1903, function (err$1906, files$1907) {
+        if (!!err$1906)
+            throw err$1906;
+        processFiles$1726(files$1907, null, onComplete$1904);
     });
 };

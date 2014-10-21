@@ -63,10 +63,16 @@ text {
   fill: #fff;
 }
 
+.placeholder-node rect {
+  stroke: none !important;
+  stroke-width: 0px !important;
+  fill: none !important; 
+}
+
 .node rect:hover {
   stroke: #333;
   stroke-width: 3px;
-  fill: red;
+  fill: #ccc;
 }
 
 .edgeLabel rect {

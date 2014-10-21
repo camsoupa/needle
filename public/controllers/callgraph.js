@@ -56,17 +56,23 @@ angular.module('needle')
         var methods = {};
 
         for (var caller in callers) {
-          methods[caller] = {name: caller, calls: callers[caller].calls.length, called: 0}
+          methods[caller] = {name: caller, calls: callers[caller].calls.length, called: 0, signature: caller}
         }
         for (var caller in callers) {
           for (var i = 0; i < callers[caller].calls.length; i++) {
-            var calleeName = callers[caller].calls[i].signature;
-            var callee = methods[calleeName];
-            if(callee == null) {
-              callee = {name: calleeName, calls: 0, called: 1};
-              methods[calleeName] = callee;
+            var callee = callers[caller].calls[i];
+            var calleeName = callee.signature;
+            if(!(callee in methods)) {
+              methods[calleeName] = {
+                name: calleeName, 
+                calls: 0, 
+                called: 1, 
+                signature: calleeName, 
+                isSource: callee.isSource, 
+                isSink: callee.isSink
+              };
             }
-            callee.called++;
+            methods[calleeName].called++;
           }
         }
         $scope.graph = new dagreD3.Digraph();
@@ -75,33 +81,45 @@ angular.module('needle')
           $scope.methods.push(methods[m]);
         }
         var updateGraph = function(nodeId) {
+          var placeholderNodeStyle = 'stroke: none !important; stroke-width: 0px !important; fill: none !important;';
           var g = new dagreD3.Digraph();
           var root = callers[nodeId];
           var className = getClassName(nodeId);
           var methodName = getMethodName(nodeId);
-          g.addNode(nodeId, { label: className + '.' + methodName });
+          var method = methods[nodeId];
+          var rootStyle = method.isSink ? 'fill: #ff9966;' : method.isSource ? 'fill: #afa;' : '';
+          g.addNode(nodeId, { label: className + '.' + methodName, style: rootStyle })
+          var node = g.node(nodeId);
           if (root) {
             for (var i = 0; i < root.calls.length; i++) { 
               var callee = root.calls[i];
+              if (callee.isSource || callee.isSink) { node.style = 'fill: #ffff66'; }
               var calleeClass = getClassName(callee.signature);
               var calleeMethodName = getMethodName(callee.signature);
-              if (!g.hasNode(callee.signature)) g.addNode(callee.signature, { label: calleeClass + '.' + calleeMethodName });
-              g.addEdge(null, nodeId, callee.signature);
-              if (!(callee.signature in callers)) {
-                var leaf = 'leaf:' + callee.signature;
-                if (!g.hasNode(leaf)) {
-                  g.addNode(leaf, { label: 'X' });
-                  g.addEdge(null, callee.signature, leaf);
-                }
+              if (!g.hasNode(callee.signature)) {
+                var style = callee.isSink ? 'fill: #ff9966;' : callee.isSource ? 'fill: #afa;' : '';
+                var nodeProperties = { label: calleeClass + '.' + calleeMethodName, style: style };
+                g.addNode(callee.signature, nodeProperties);
+              }
+              var edgeStyle = (callee.type == 'invoke-virtual' || callee.type == 'invoke-interface') ? 'stroke: blue;' : '';
+              g.addEdge(null, nodeId, callee.signature, { style: edgeStyle });
+              var leaf = 'leaf:' + callee.signature;
+              if (!g.hasNode(leaf)) {
+                g.addNode(leaf, { 
+                  label: !(callee.signature in callers) ? 'EXTERNAL' : callers[callee.signature].calls.length.toString(), 
+                  style: placeholderNodeStyle 
+                });
+                g.addEdge(null, callee.signature, leaf);
               }
             }
           } else {
             var leaf = 'leaf:' + nodeId;
             if (!g.hasNode(leaf)) {
-              g.addNode(leaf, { label: 'X' });
+              g.addNode(leaf, { label: 'EXTERNAL', style: placeholderNodeStyle });
               g.addEdge(null, nodeId, leaf);
             }
           }
+          
           for (var caller in callers) {
             var className = getClassName(caller);
             var methodName = getMethodName(caller);
@@ -111,6 +129,11 @@ angular.module('needle')
             }
           }
           $scope.graph = g;
+          $scope.onClick = function(nodeId) {
+            updateGraph(nodeId);
+            $rootScope.$broadcast('graph_updated');
+            // TODO issue a method request to pull up the file and line number
+          }
         }
 
         $scope.$watch('selectedMethod', function (value) {
@@ -120,17 +143,14 @@ angular.module('needle')
           }
         }, true)
         
-        $scope.onClick = function(nodeId) {
-          updateGraph(nodeId);
-          
-          $rootScope.$broadcast('graph_updated');
-          // TODO issue a method request to pull up the file and line number
-        }
-
         $scope.$on('method_request', function(evt, item){
-          $scope.onClick(item.data.signature);
+          updateGraph(item.data.signature);
+          $rootScope.$broadcast('graph_updated');
         });
-        
+        $scope.$on('risk_request', function(evt, item){
+          updateGraph(item.data.signature);
+          $rootScope.$broadcast('graph_updated');
+        });
       });
     }])
 .directive('dagre', [ '$timeout', function($timeout) {
