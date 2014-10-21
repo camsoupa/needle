@@ -32,10 +32,10 @@ angular.module('needle')
         }
       }
 
-      $scope.$on('risk_request', function (evt, item, app) {
-        showFile(app, item.data.filename, item.data.line-1);
+      $scope.$on('risk_request', function (evt, risk, app) {
+        showFile(app, risk.filename, risk.line-1);
       })
-      $scope.$on('method_request', function (evt, item, app) {
-        showFile(app, item.data.filename, item.data);
+      $scope.$on('method_request', function (evt, method, app) {
+        showFile(app, method.filename, method);
       })
     }])

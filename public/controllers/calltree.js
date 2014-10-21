@@ -20,14 +20,14 @@ var myapp = angular.module('needle')
     $scope.toggle = function (scope) { scope.toggle(); }
     $scope.onRiskClicked = function (item) { 
       console.log(item.title);
-      $rootScope.$broadcast('risk_request', item, $stateParams.appName);
+      $rootScope.$broadcast('risk_request', item.data, $stateParams.appName);
     }
     $scope.onMethodClicked = function (item) { 
       console.log(item.title);
-      $rootScope.$broadcast('method_request', item, $stateParams.appName);
+      $rootScope.$broadcast('method_request', item.data, $stateParams.appName);
     }
     $scope.filter = function (item, pat) { 
-      // TODO consider memoizing this func
+      // TODO consider memoizing this func if it is slow for large trees
       if (pat == '') return false;
 
       // show if an ancestor should show

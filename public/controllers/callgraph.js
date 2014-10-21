@@ -2,22 +2,33 @@ angular.module('needle')
   .controller('callgraph', ['$stateParams', '$scope', '$rootScope', '$http', '$timeout', 'report',
     function($stateParams, $scope, $rootScope, $http, $timeout, report) {
       console.log($stateParams);
-      $scope.graphType = 'Local callers/callees';
-      $scope.showSourceSinkOverviewGraph = function () {
-       $scope.graph = 'TypeSource/Sink overview'
-      }
-      $scope.showSourceSinksGraph = function () {
-        $scope.graphType = 'Reachable sources/sinks'
-      }
-      $scope.showNeighborGraph = function () {
-        $scope.graphType = 'Local callers/callees'
-      }
+ 
+      var GRAPH_NEIGHBORS,
+          GRAPH_ALL_SRC_SNK,
+          GRAPH_REACHABLE_SRC_SNK,
+          GRAPH_ALL_CALLS,
+          GRAPH_CLASSES;
 
-      $scope.showCallGraph = function () {
-        $scope.graphType = 'Full call graph'
-      }
-      $scope.showClassGraph = function () {
-        $scope.graphType = 'Class relationships'
+      $scope.graphLabels = [
+        'Local callers/callees',
+        'Source/Sink overview',
+        'Reachable sources/sinks',
+        'Full call graph',
+        'Class relationships'
+      ];
+
+      $scope.graphTypes = [
+        GRAPH_NEIGHBORS = 0,
+        GRAPH_ALL_SRC_SNK = 1,
+        GRAPH_REACHABLE_SRC_SNK = 2,
+        GRAPH_ALL_CALLS = 3,
+        GRAPH_CLASSES = 4
+      ];
+
+      $scope.selectedGraphType = GRAPH_NEIGHBORS;
+
+      $scope.showGraph = function (type) {
+        $scope.selectedGraphType = type;
       }
 
       function getFullClassName(method) {
@@ -56,23 +67,28 @@ angular.module('needle')
         var methods = {};
 
         for (var caller in callers) {
-          methods[caller] = {name: caller, calls: callers[caller].calls.length, called: 0, signature: caller}
+          methods[caller] = {
+            name: caller, 
+            calls: callers[caller].calls.length, 
+            called: 0, 
+            signature: caller, 
+            risks: callers[caller].risks
+          }
         }
         for (var caller in callers) {
           for (var i = 0; i < callers[caller].calls.length; i++) {
-            var callee = callers[caller].calls[i];
-            var calleeName = callee.signature;
-            if(!(callee in methods)) {
-              methods[calleeName] = {
-                name: calleeName, 
+            var callee = callers[caller].calls[i];;
+            if(!(callee.signature in methods)) {
+              methods[callee.signature] = {
+                name: callee.signature, 
                 calls: 0, 
                 called: 1, 
-                signature: calleeName, 
+                signature: callee.signature, 
                 isSource: callee.isSource, 
                 isSink: callee.isSink
               };
             }
-            methods[calleeName].called++;
+            methods[callee.signature].called++;
           }
         }
         $scope.graph = new dagreD3.Digraph();
@@ -80,7 +96,9 @@ angular.module('needle')
         for(var m in methods) {
           $scope.methods.push(methods[m]);
         }
+
         var updateGraph = function(nodeId) {
+
           var placeholderNodeStyle = 'stroke: none !important; stroke-width: 0px !important; fill: none !important;';
           var g = new dagreD3.Digraph();
           var root = callers[nodeId];
@@ -93,13 +111,22 @@ angular.module('needle')
           if (root) {
             for (var i = 0; i < root.calls.length; i++) { 
               var callee = root.calls[i];
-              if (callee.isSource || callee.isSink) { node.style = 'fill: #ffff66'; }
+              if (callee.isSource || callee.isSink) { node.style = 'fill: #ffff66;'; }
               var calleeClass = getClassName(callee.signature);
               var calleeMethodName = getMethodName(callee.signature);
               if (!g.hasNode(callee.signature)) {
-                var style = callee.isSink ? 'fill: #ff9966;' : callee.isSource ? 'fill: #afa;' : '';
-                var nodeProperties = { label: calleeClass + '.' + calleeMethodName, style: style };
-                g.addNode(callee.signature, nodeProperties);
+                var calleeNodeStyle = '';
+                if (callee.isSink) { 
+                  calleeNodeStyle = 'fill: #ff9966;';
+                } else if (callee.isSource) {
+                  calleeNodeStyle = 'fill: #afa;';
+                } else if (methods[callee.signature].risks && methods[callee.signature].risks.length > 0) {
+                  calleeNodeStyle = 'fill: #ffff66;';
+                }
+                g.addNode(callee.signature, { 
+                  label: calleeClass + '.' + calleeMethodName,
+                  style: calleeNodeStyle 
+                });
               }
               var edgeStyle = (callee.type == 'invoke-virtual' || callee.type == 'invoke-interface') ? 'stroke: blue;' : '';
               g.addEdge(null, nodeId, callee.signature, { style: edgeStyle });
@@ -124,15 +151,22 @@ angular.module('needle')
             var className = getClassName(caller);
             var methodName = getMethodName(caller);
             if (calls(callers[caller], nodeId)) {
-              if (!g.hasNode(caller)) g.addNode(caller, { label: className + '.' + methodName });
+              if (!g.hasNode(caller)) {
+                g.addNode(caller, { 
+                  label: className + '.' + methodName, 
+                  style: (callers[caller].risks && callers[caller].risks.length > 0) ? 'fill: #ffff66;' : ''
+                });
+              }
               g.addEdge(null, caller, nodeId);
             }
           }
           $scope.graph = g;
           $scope.onClick = function(nodeId) {
-            updateGraph(nodeId);
-            $rootScope.$broadcast('graph_updated');
-            // TODO issue a method request to pull up the file and line number
+            if(nodeId.substring(0,4) != 'leaf:') {
+              updateGraph(nodeId);
+              $rootScope.$broadcast('graph_updated');
+              // TODO risks need filename and line
+            }
           }
         }
 
@@ -143,12 +177,12 @@ angular.module('needle')
           }
         }, true)
         
-        $scope.$on('method_request', function(evt, item){
-          updateGraph(item.data.signature);
+        $scope.$on('method_request', function(evt, methodDef){
+          updateGraph(methodDef.signature);
           $rootScope.$broadcast('graph_updated');
         });
-        $scope.$on('risk_request', function(evt, item){
-          updateGraph(item.data.signature);
+        $scope.$on('risk_request', function(evt, risk){
+          updateGraph(risk.signature);
           $rootScope.$broadcast('graph_updated');
         });
       });

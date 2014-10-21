@@ -76,14 +76,10 @@
         <dagre d3-graph="graph" style="position: absolute;" d3-click="onClick(node)"></dagre>  
         <div class="btn-group pull-right" dropdown is-open="status.isopen" style="margin: 10px">
               <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled">
-                {{graphType + ' '}}<span class="caret"></span>
+                {{graphLabels[selectedGraphType] + ' '}}<span class="caret"></span>
               </button>
               <ul class="dropdown-menu" role="menu">
-                <li><a href="" ng-click="showSourceSinkOverviewGraph()">Source/Sink overview</a></li>
-                <li><a href="" ng-click="showSourceSinksGraph()">Reachable sources/sinks</a></li>
-                <li><a href="" ng-click="showNeighborGraph()">Local callers/callees</a></li>
-                <li><a href="" ng-click="showCallGraph()">Full call graph</a></li>
-                <li><a href="" ng-click="showClassGraph()">Class relationships</a></li>
+                <li ng-repeat="graphType in graphTypes"><a href="" ng-click="showGraph(graphType)">{{graphLabels[graphType]}}</a></li>
               </ul>
             </div>
         <dagre d3-graph="graph" d3-click="onClick(node)"></dagre>
