@@ -4,11 +4,15 @@ needle README
 
 ##install nodejs
 
-get nodejs from your platform from http://nodejs.org/
+get nodejs for your platform from http://nodejs.org/
+
+follow nodejs install instructions.
 
 ##clone needle repo
 
-##get node dependencies
+git clone git@github.com:camsoupa/needle.git
+
+##get node package dependencies for needle (FYI, these are specified in package.json - all nodejs apps follow this system)
 $ cd needle && npm install
 
 ##put preprocessed android apps in needle/data/apps
