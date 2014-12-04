@@ -18075,3 +18075,7 @@ NO_CATEGORY:
 <android.hardware.display.IDisplayManager$Stub$Proxy: int[] getDisplayIds()> (NO_CATEGORY)
 <com.android.server.accessibility.ScreenMagnifier$DisplayProvider: android.view.Display getDisplay()> (NO_CATEGORY)
 <gov.nist.javax.sip.message.SIPMessage: javax.sip.header.ContentDispositionHeader getContentDisposition()> (NO_CATEGORY)
+<java.io.BufferedReader: java.lang.String readLine()> (IO)
+<android.content.SharedPreferences: java.lang.String getString(java.lang.String,java.lang.String)> (STORAGE)
+<android.content.SharedPreferences: long getLong(java.lang.String,long)> (STORAGE)
+<android.content.SharedPreferences: boolean getBoolean(java.lang.String,boolean)> (STORAGE)

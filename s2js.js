@@ -39,6 +39,16 @@ function matchStmt {
     invoke.signature = getMethodSigFromInvoke(invoke);
     return invoke;
   },
+  [S(type), regs, [S('array'), array_type], S(name), params, ret] => {
+    var invoke = {
+      type: type,
+      name: matchType(array_type) + '[]' + name.replace(/\//g, '.'),
+      params: _.map(params, matchType),
+      ret: matchType(ret)
+    };
+    invoke.signature = getMethodSigFromInvoke(invoke);
+    return invoke;	
+  },
   [S('line'), ln] => ln,
   * => null
 }
@@ -163,6 +173,7 @@ var onFilesDone = function (classes, onComplete) {
   readSourcesAndSinks(function (sources, sinks) {
     _.forEach(methods, function (m, mSig) {
       _.forEach(m.calls, function (invoke) {
+
         if (invoke.signature in sources) {
           if(!(m.risks)) m.risks = [];
           invoke.isSource = true;
@@ -255,7 +266,13 @@ function readSourcesAndSinks(onComplete) {
 exports.getCallGraph = function (path, onComplete) {
   find(path, function (err, files) {
     if(!!err) throw err;
-    processFiles(files, null, onComplete);
+    
+    /* filter out android support lib files */
+	  var appFiles = _.filter(files, function (f) {
+			return f.indexOf('android/support') == -1;
+		})
+
+    processFiles(appFiles, null, onComplete);
   })
 }
 
