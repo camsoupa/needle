@@ -7,25 +7,36 @@ var myapp = angular.module('needle')
     $scope.treeState = 'By method';
     $scope.byRank = function () { 
       $scope.treeState = 'By rank'; 
-      // use states to transition to a sibling state - put tree into a template and load in ui-view as child state    
+      // use states to transition to a sibling state - 
+      // put tree into a template and load in ui-view as child state    
     }
     $scope.byClass = function () { 
       $scope.treeState = 'By class'; 
-      // use states to transition to a sibling state - put tree into a template and load in ui-view as child state    
+      // use states to transition to a sibling state - 
+      // put tree into a template and load in ui-view as child state    
     }
     $scope.byMethod = function () { 
       $scope.treeState = 'By method'; 
-      // use states to transition to a sibling state - put tree into a template and load in ui-view as child state    
+      // use states to transition to a sibling state - 
+      // put tree into a template and load in ui-view as child state    
     }
+    
+    /* toggle collapsed status */
     $scope.toggle = function (scope) { scope.toggle(); }
+    
+    /* when a risk item is clicked broadcast a msg for other components to handle */
     $scope.onRiskClicked = function (item) { 
       console.log(item.title);
       $rootScope.$broadcast('risk_request', item.data, $stateParams.appName);
     }
+    
+    /* when a method is clicked broadcast a msg for other components to handle */
     $scope.onMethodClicked = function (item) { 
       console.log(item.title);
       $rootScope.$broadcast('method_request', item.data, $stateParams.appName);
     }
+    
+    /* when a filter msg is typed this method gets fired */
     $scope.filter = function (item, pat) { 
       // TODO consider memoizing this func if it is slow for large trees
       if (pat == '') return false;
@@ -68,6 +79,7 @@ var myapp = angular.module('needle')
     var id = 0;
     var pkgs = {};
     
+    /* build the left sidepanel tree view of pkg->method->risk */
     report.get($stateParams.appName).then(function (response) {
       $scope.pkgs = [];
       var prog = response.data;
@@ -96,7 +108,8 @@ var myapp = angular.module('needle')
             for(var j = 0; j < m.risks.length; j++) {
               var r = m.risks[j];
               r.filename = m.filename;
-              var riskTitle =  (r.isSource ? 'SOURCE' : (r.isSink ? 'SINK' : '')) + ' ' + abbrev(r.name) + ' (' + r.category + ')';
+              var riskTitle =  (r.isSource ? 'SOURCE' : (r.isSink ? 'SINK' : '')) + 
+                ' ' + abbrev(r.name) + ' (' + r.category + ')';
               method.items.push({ id: ++id, title: riskTitle, parent: method, data: r })
             }     
           }

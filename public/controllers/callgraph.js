@@ -12,8 +12,8 @@ angular.module('needle')
       $scope.graphLabels = [
         'Local callers/callees',
         'Source/Sink overview',
-        'Reachable sources/sinks',
-        'Full call graph',
+        'Sources/sinks flows',
+        'Crypto flows',
         'Class relationships'
       ];
 
@@ -66,6 +66,7 @@ angular.module('needle')
         
         var methods = {};
 
+        /* transform graph into ui-friendly format (maybe should do this on server to begin with) */
         for (var caller in callers) {
           methods[caller] = {
             name: caller, 
@@ -97,9 +98,11 @@ angular.module('needle')
           $scope.methods.push(methods[m]);
         }
 
+        /* called when the graph is clicked or when a method or risk is clicked in the left panel */
         var updateGraph = function(nodeId) {
-
-          var placeholderNodeStyle = 'stroke: none !important; stroke-width: 0px !important; fill: none !important;';
+          /* TODO based on current graph type, change behavior of updateGraph */
+          var placeholderNodeStyle = 
+            'stroke: none !important; stroke-width: 0px !important; fill: none !important;';
           var g = new dagreD3.Digraph();
           var root = callers[nodeId];
           var className = getClassName(nodeId);
@@ -128,12 +131,15 @@ angular.module('needle')
                   style: calleeNodeStyle 
                 });
               }
-              var edgeStyle = (callee.type == 'invoke-virtual' || callee.type == 'invoke-interface') ? 'stroke: blue;' : '';
+              var edgeStyle = 
+                (callee.type == 'invoke-virtual' || callee.type == 'invoke-interface') 
+                ? 'stroke: blue;' : '';
               g.addEdge(null, nodeId, callee.signature, { style: edgeStyle });
               var leaf = 'leaf:' + callee.signature;
               if (!g.hasNode(leaf)) {
                 g.addNode(leaf, { 
-                  label: !(callee.signature in callers) ? 'EXTERNAL' : callers[callee.signature].calls.length.toString(), 
+                  label: !(callee.signature in callers) 
+                    ? 'EXTERNAL' : callers[callee.signature].calls.length.toString(), 
                   style: placeholderNodeStyle 
                 });
                 g.addEdge(null, callee.signature, leaf);
@@ -154,7 +160,8 @@ angular.module('needle')
               if (!g.hasNode(caller)) {
                 g.addNode(caller, { 
                   label: className + '.' + methodName, 
-                  style: (callers[caller].risks && callers[caller].risks.length > 0) ? 'fill: #ffff66;' : ''
+                  style: (callers[caller].risks && callers[caller].risks.length > 0) 
+                    ? 'fill: #ffff66;' : ''
                 });
               }
               g.addEdge(null, caller, nodeId);
@@ -170,6 +177,7 @@ angular.module('needle')
           }
         }
 
+        /* when a graph node is selected, update the graph */
         $scope.$watch('selectedMethod', function (value) {
           if(value && value.data) {          
             updateGraph(value.data.signature);
@@ -177,10 +185,13 @@ angular.module('needle')
           }
         }, true)
         
+        /* when a method item in the left sidepanel is clicked, update the graph*/
         $scope.$on('method_request', function(evt, methodDef){
           updateGraph(methodDef.signature);
           $rootScope.$broadcast('graph_updated');
         });
+        
+        /* when a risk item in the left sidepanel is clicked, update the graph */
         $scope.$on('risk_request', function(evt, risk){
           updateGraph(risk.signature);
           $rootScope.$broadcast('graph_updated');

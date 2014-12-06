@@ -12,7 +12,8 @@ angular.module('needle')
       }
 
       function highlightAndScrollToLine (data, lineOrMethodDef) {
-        var line = typeof lineOrMethodDef == 'number' ? lineOrMethodDef : getMethodDefLine(data.lines, lineOrMethodDef);
+        var line = typeof lineOrMethodDef == 'number' 
+          ? lineOrMethodDef : getMethodDefLine(data.lines, lineOrMethodDef);
         if (line >= 0) data.lines[line].highlight = true;
         $scope.file = data;
          $timeout(function () {
@@ -21,6 +22,7 @@ angular.module('needle')
          }, 20);
       }
 
+      /* get the file from the server and scroll to the line */
       function showFile (app, path, line) {
         if (path in filesCache) {
           highlightAndScrollToLine(filesCache[path], line);

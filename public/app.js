@@ -29,7 +29,7 @@ angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', '
           url: '/:appName',
           views: {
            'breadcrumb': {
-              template: '<ol class="breadcrumb"><li><a ui-sref="apps" class="text-danger"><b>apps</b></li><li class="text-primary"><b>{{appName}}</b></li></ol>',
+              template: '<ol class="breadcrumb"><li><a ui-sref="apps()" class="text-danger"><b>apps</b></li><li class="text-primary"><b>{{appName}}</b></li></ol>',
               controller: [ '$scope', '$stateParams', function ($scope, $stateParams) {
                 $scope.appName = $stateParams.appName;
               }]
