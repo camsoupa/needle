@@ -22,6 +22,28 @@ var S = {
   }
 };
 
+function class2Filename(className) {
+  return className.split('$')[0].replace(/\./g, '/') + '.java'
+}
+
+function matchPathNode {
+  [className, stmt, ln] => {
+    return {
+      className: className,
+      filename: class2Filename(className),
+      stmt: stmt,
+      line: ln
+    }
+  }
+}
+
+function parseSourceSinkPaths (str) {
+  var paths = parse(str);
+  return _.map(paths, function (path) {
+    return _.map(path, matchPathNode);
+  })
+}
+
 function matchType {
   [S('array'), type] => [ matchType(type) ],
   [S('object'), S(className)] => className.replace(/\//g, '.'),
@@ -263,6 +285,20 @@ function readSourcesAndSinks(onComplete) {
   })
 }
 
+
+exports.getSourceSinkPaths = function (path, callback) {
+ fs.readFile(path, { encoding: 'utf-8' }, function (err, data) {
+    if(!!err) throw err;
+    var paths = parseSourceSinkPaths(data); 
+    
+    _.forEach(paths, function (path) {
+      path[0].category = 'SOURCE',
+      path[path.length-1].category = 'SINK'
+    })
+    
+    callback(paths);
+  })  
+}
 exports.getCallGraph = function (path, onComplete) {
   find(path, function (err, files) {
     if(!!err) throw err;

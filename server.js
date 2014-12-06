@@ -4,7 +4,7 @@ var fs = require('fs'),
     hl = require('highlight.js'),
     _  = require('lodash'),
     fs = require('fs'),
-    getCallGraph = require('./compiled/_s2js.js').getCallGraph,
+    s2js = require('./compiled/_s2js.js'),
     xml2js = require('xml2js');
 
 var port = 3000;
@@ -41,6 +41,7 @@ app.get('/file?', function (req, res) {
   if (app in fileCache) {
     res.send(fileCache[path]);
   } else {
+    path = path.replace('.java', '');
     fs.readFile('data/apps/source/' + app + '/src/' + path.replace(/\./g, '/') + '.java', 
       { encoding: 'utf-8' }, 
       function (err, data) { 
@@ -113,15 +114,18 @@ app.get('/callgraph?', function (req, res) {
     res.send(graphCache[app]);
   } else {
     // TODO: readdir recursively
-    getCallGraph('data/apps/compiled/' + app + '/', function (graph) {
+    s2js.getCallGraph('data/apps/compiled/' + app + '/', function (graph) {
       graphCache[app] = graph;
       res.send(graph);
     });
   }
 });
 
-app.get('/flowpaths?', function (req, res) {
-
+app.get('/sourcesinks?', function (req, res) {
+  var app = req.query.app;
+  s2js.getSourceSinkPaths('data/apps/sourcesinks/' + app + '.ss', function (graph) {
+    res.send(graph);
+  })
 });
 
 var io = require('socket.io').listen(app.listen(port));

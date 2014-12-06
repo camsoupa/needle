@@ -34,6 +34,7 @@ angular.module('needle')
         }, 5);
       };
 
+      /* get the app manifest properties and show apps in a list */
       appsList.then(function (response) {
         var apps = response.data.apps;
         var id = 0;
@@ -56,13 +57,16 @@ angular.module('needle')
         }
         function getFeatures(app) {
           var feats = app.parsed.manifest['uses-feature'];
-          return feats ? feats.map(function (feat) {
-            if (feat['attributes']['android:name'] == null) {
-              console.log(feat);
-              return;
-            }
-            return feat['attributes']['android:name']; 
-          }).filter(function (feat) { return feat != null; }).map(function (item) { return {id: ++id, title: item }; }) : [];
+          return feats ? feats
+            .map(function (feat) {
+              if (feat['attributes']['android:name'] == null) {
+                console.log(feat);
+                return;
+              }
+              return feat['attributes']['android:name']; 
+            })
+            .filter(function (feat) { return feat != null; })
+            .map(function (item) { return {id: ++id, title: item }; }) : [];
         }
 
         function getAllIntentFilters(app) {
@@ -99,7 +103,7 @@ angular.module('needle')
           return list.map(function (item) { return {id: ++id, title: item }; })
         }
 
-        $scope.apps = apps.sort().reverse().map(function (app) { 
+        $scope.apps = apps.sort().map(function (app) { 
           return {
             id: ++id, 
             title: app.app, 

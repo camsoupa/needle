@@ -17,7 +17,7 @@
             <div ui-tree-handle class="tree-node tree-node-content">
                 <span class="glyphicon glyphicon-file text-success" ng-click="toggle(this)">
                 </span>
-              <a ui-sref="app({'appName': app.title})">{{app.title}}</a>
+              <a ui-sref="app.content.ssgraph({'appName': app.title})">{{app.title}}</a>
             </div>
             <ol ui-tree-nodes="" ng-model="app.items" ng-class="{hidden: collapsed}">
               <li ui-tree-node ng-repeat="category in app.items" ng-hide="filter(category, pattern)">

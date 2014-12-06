@@ -1,0 +1,58 @@
+<div class="input-group">
+  <input ng-model="pattern" placeholder="filter..." class="form-control form-control-small">
+  <div class="btn-group input-group-btn" dropdown is-open="status.isopen">
+    <button type="button" 
+            style="width: 105px;"
+            class="btn btn-primary dropdown-toggle" 
+            ng-disabled="disabled">
+      {{treeState + ' '}}<span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-right" role="menu">
+      <li><a href="" ng-click="byRank()">Risks By Rank</a></li>
+      <li><a href="" ng-click="byClass()">Risks By Class</a></li>
+      <li><a href="" ng-click="byMethod()">Risks By Method</a></li>
+    </ul>
+  </div>
+</div><!-- /input-group -->
+
+<div ui-tree data-drag-enabled="false" 
+     style="height: 92%; overflow-y: scroll; margin-top: 10px;" id="tree-root">
+  <ol ui-tree-nodes="" ng-model="data"  ng-class="{hidden: collapsed}">
+    <li ui-tree-node ng-repeat="pkg in pkgs" ng-hide="filter(pkg, pattern)">
+      <div ui-tree-handle class="tree-node tree-node-content">
+          <span class="glyphicon glyphicon-folder-open text-success" ng-click="toggle(this)">
+          </span>
+        {{pkg.title}}
+      </div>
+      <ol ui-tree-nodes="" ng-model="pkg.items" ng-class="{hidden: collapsed}">
+        <li ui-tree-node ng-repeat="clazz in pkg.items" ng-hide="filter(clazz, pattern)">
+          <div ui-tree-handle class="tree-node tree-node-content">
+              <span class="glyphicon glyphicon-file text-primary" ng-click="toggle(this)">
+              </span>
+            {{clazz.title}}
+          </div>
+          <ol ui-tree-nodes="" ng-model="clazz.items" ng-class="{hidden: collapsed}">
+            <li ui-tree-node ng-repeat="method in clazz.items" ng-hide="filter(method, pattern)">
+              <div ui-tree-handle class="tree-node tree-node-content" 
+                   ng-click="onMethodClicked(method)">
+                  <span class="glyphicon glyphicon-flash text-warning" ng-click="toggle(this)">
+                  </span>
+                {{method.title}}
+              </div>
+              <ol ui-tree-nodes="" ng-model="method.items" ng-class="{hidden: collapsed}">
+                <li ui-tree-node ng-repeat="risk in method.items" ng-hide="filter(risk, pattern)">
+                  <div ui-tree-handle class="tree-node tree-node-content" 
+                       ng-click="onRiskClicked(risk)">
+                      <span class="glyphicon glyphicon-exclamation-sign text-danger">
+                      </span>
+                    {{risk.title}}
+                  </div>
+                </li>
+              </ol>
+            </li>
+          </ol>
+        </li>
+      </ol>
+    </li>
+  </ol>
+</div>

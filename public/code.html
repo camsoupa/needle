@@ -1,0 +1,16 @@
+<div ng-model="file" 
+     style="font-family: Menlo, Monaco, Consolas, 'Courier New', monospace; font-size: 13px;">
+  <div class="text-muted"
+       style="position: fixed; background: #ccc; width: 60%;">
+       {{file.filename}}
+  </div>
+  <div style="height: 1px; width: 100%; background: #ccc;"></div>
+  <div style="margin-top: 20px">  
+    <div id="line-{{$index}}" 
+         ng-repeat="line in file.lines" 
+         class="source-code-line" 
+         ng-class="{ 'highlighted' : line.highlight }">
+      <div ng-bind-html="line.html"></div>
+    </div>
+  </div>
+</div>
