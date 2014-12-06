@@ -120,6 +120,10 @@ app.get('/callgraph?', function (req, res) {
   }
 });
 
+app.get('/flowpaths?', function (req, res) {
+
+});
+
 var io = require('socket.io').listen(app.listen(port));
 
 io.sockets.on('connection', function (socket) {
