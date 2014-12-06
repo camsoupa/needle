@@ -3,6 +3,9 @@ var fs = require('fs'),
     _ = require('lodash'),
     find = require('recursive-readdir');
 
+/* avoid recalculation each time */
+var appCache = {};
+
 var NOT_NULL = function (m) { return !!m; };
 
 /* extracts a javascript encoded symbol for pattern matching */
@@ -23,7 +26,13 @@ var S = {
 };
 
 function class2Filename(className) {
-  return className.split('$')[0].replace(/\./g, '/') + '.java'
+  return className.split('$')[0].replace(/\./g, '/');
+}
+
+function getPkg(clazz) {
+  var parts = clazz.split('.');
+  parts.pop();
+  return parts.join('.');
 }
 
 function matchPathNode {
@@ -104,30 +113,32 @@ function matchMethodDef {
 }
 
 function matchClass {
-  [S(type), [S('attrs'), ...attrs], S(clazz), [S('super'), S(parent)], [S('source'), file], ...members]  
+  [S(type), [S('attrs'), ...attrs], S(path), [S('super'), S(parent)], [S('source'), file], ...members]  
     if (type === 'class' || type == 'interface') => {
-      clazz = clazz.replace(/\//g, '.');
+      clazz = path.replace(/\//g, '.');
       parent = parent.replace(/\//g, '.');
+      filename = path.split('$')[0];
       return {
         type: type,
-        file: file,
+        file: filename,
         name: clazz,
         parent: parent,
         attrs: _.map(attrs, S.getSymbolName),
         methods: _.chain(members)
                   .map(matchMethodDef)
                   .filter(NOT_NULL)
-                  .map(function (m) { m.clazz = clazz; m.file = file; return m; })
+                  .map(function (m) { m.clazz = clazz; m.filename = filename; return m; })
                   .value()
       };
   }, 
   * => null
 }
 
-var onFilesDone = function (classes, onComplete) { 
+var onFilesDone = function (appName, classes, onComplete) { 
   var methods = {};
   var outClasses = {};
-
+  var files = {};
+  
   _.forEach(classes, function (clazz) {
     outClasses[clazz.name] = {
       type: clazz.type,
@@ -138,9 +149,11 @@ var onFilesDone = function (classes, onComplete) {
       methods: [],
       subClasses: []
     };
+    files[clazz.file] = {};
     _.forEach(clazz.methods, function (method) {
       var sig = getMethodSig(method);
       methods[sig] = method;
+      methods[sig].file = clazz.file;
       outClasses[clazz.name].methods.push(sig);
     });
   });
@@ -178,10 +191,11 @@ var onFilesDone = function (classes, onComplete) {
         /* add known subTypes of the called class to the calls list */
         var parentClass = invoke.name.split('.').slice(0,-1).join('.');
         var methodName = invoke.name.split('.').pop();
-        _.forEach(indirectSubclassesOf(parentClass), function (subClass) { 
+        _.forEach(indirectSubclassesOf(parentClass), function (subClass) {
           method.calls.push({
             type: invoke.type,
             name: [subClass, methodName].join('.'),
+            file: method.file,
             line: invoke.line,
             params: invoke.params,
             signature: invoke.signature.replace(parentClass, subClass),
@@ -201,6 +215,8 @@ var onFilesDone = function (classes, onComplete) {
           invoke.isSource = true;
           invoke.category = sources[invoke.signature].category;
           m.risks.push(invoke);
+          if (!(invoke.line in files[m.file])) files[m.file][invoke.line] = [];
+          files[m.file][invoke.line].push(invoke);
         }
         if (invoke.signature in sinks) {
 
@@ -208,10 +224,14 @@ var onFilesDone = function (classes, onComplete) {
           invoke.isSink = true;
           invoke.category = sinks[invoke.signature].category;
           m.risks.push(invoke);
+          console.log(m.file);
+          if (!(invoke.line in files[m.file])) files[m.file][invoke.line] = [];
+          files[m.file][invoke.line].push(invoke);
         }
       })
     });
-    onComplete({classes: outClasses, methods: methods});
+    appCache[appName] = {classes: outClasses, methods: methods, files: files};
+    onComplete(appCache[appName]);
   }); 
 }
 
@@ -224,17 +244,18 @@ function getMethodSigFromInvoke(m) {
   return m.name + '(' + m.params.join(',') + ') => ' + m.ret; 
 }
 
-function processFiles(files, classes, onComplete) {
+function processFiles(appName, files, classes, cb) {
   if (!classes) classes = {};
   if (files.length) {
     console.log(_.last(files));
     fs.readFile(files.pop(), { encoding: 'utf-8' }, function (err, data) {
       var clazz = matchClass(parse(data));
       classes[clazz.name] = clazz;
-      processFiles(files, classes, onComplete);   
+      processFiles(appName, files, classes, cb);   
     });
   } else {
-    onFilesDone(classes, onComplete);
+    
+    onFilesDone(appName, classes, cb);
   }
 }
 
@@ -266,7 +287,15 @@ function parseSourceSinkList(path, onComplete) {
   }) 
 }
 
+
+var cachedSources;
+var cachedSinks;
+
 function readSourcesAndSinks(onComplete) {
+  if (!!cachedSources && !!cachedSinks) {
+    onComplete(cachedSources, cachedSinks);
+    return;
+  }
   parseSourceSinkList('data/sources_list', function (sources) {
     parseSourceSinkList('data/sinks_list', function (sinks) {
       var outSources = {};
@@ -279,27 +308,37 @@ function readSourcesAndSinks(onComplete) {
       _.forEach(sinks, function (sink) {
         outSinks[getMethodSig(sink)] = sink;
       })
-
+      cachedSources = outSources; cachedSinks = outSinks;
       onComplete(outSources, outSinks);
     })
   })
 }
 
+var cachedSourceSinkPaths = {};
 
-exports.getSourceSinkPaths = function (path, callback) {
+exports.getSourceSinkPaths = function (appName, path, files, callback) {
+ if (appName in cachedSourceSinkPaths) {
+   callback(cachedSourceSinkPaths[appName]);
+   return;
+ }
  fs.readFile(path, { encoding: 'utf-8' }, function (err, data) {
     if(!!err) throw err;
     var paths = parseSourceSinkPaths(data); 
     
+    // TODO add categories sources and sinks here
     _.forEach(paths, function (path) {
-      path[0].category = 'SOURCE',
-      path[path.length-1].category = 'SINK'
-    })
+      var src = path[0];
+      var snk = path[path.length-1];
+      console.log(src.filename);
+      src.category = files[src.filename][src.line];
+      snk.category = files[snk.filename][snk.line];
+    });
     
+    cachedSourceSinkPaths[appName] = paths;
     callback(paths);
   })  
 }
-exports.getCallGraph = function (path, onComplete) {
+exports.getCallGraph = function (appName, path, callback) {
   find(path, function (err, files) {
     if(!!err) throw err;
     
@@ -308,7 +347,7 @@ exports.getCallGraph = function (path, onComplete) {
 			return f.indexOf('android/support') == -1;
 		})
 
-    processFiles(appFiles, null, onComplete);
+    processFiles(appName, appFiles, null, callback);
   })
 }
 

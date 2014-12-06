@@ -57,6 +57,14 @@ text {
  background: #ffffcc; 
 }
 
+.source {
+ background: blue; 
+}
+
+.sink {
+ background: red; 
+}
+
 .node rect {
   stroke: #333;
   stroke-width: 1.5px;

@@ -43,4 +43,7 @@ angular.module('needle')
       $scope.$on('method_request', function (evt, method, app) {
         showFile(app, method.filename, method);
       })
+      $scope.$on('callgraph_method_request', function (evt, method, app) {
+        showFile(app, method.filename, method);
+      })
     }])

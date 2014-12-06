@@ -1,17 +1,18 @@
 <div>
   <div ui-view="graphContainer" style="position: absolute;">
   </div>
-
-  
-  <div class="btn-group pull-right" dropdown is-open="status.isopen" style="margin: 10px">
-    <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled">
-      {{graphLabels[selectedGraphType] + ' '}}<span class="caret"></span>
-    </button>
-    <ul class="dropdown-menu" role="menu">
-      <li ng-repeat="graphType in graphTypes">
-        <a href="" ng-click="showGraph(graphType)">{{graphLabels[graphType]}}</a>
-      </li>
-    </ul>
+  <div class="pull-right">
+    <span ui-view="controls"></span>
+    <div class="btn-group" dropdown is-open="status.isopen" style="margin: 10px">
+      <button type="button" class="btn btn-primary dropdown-toggle" ng-disabled="disabled">
+        {{graphLabels[selectedGraphType] + ' '}}<span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" role="menu">
+        <li ng-repeat="graphType in graphTypes">
+          <a href="" ng-click="showGraph(graphType)">{{graphLabels[graphType]}}</a>
+        </li>
+      </ul>
+    </div>
   </div>
           
 </div> 

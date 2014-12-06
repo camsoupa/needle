@@ -99,6 +99,9 @@ angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', '
         .state('app.content.flowpathgraph', {
           url: '/paths/:pathId',
           views: {
+            'controls@app.content' : {
+              template: ' <a ui-sref="app.content.ssgraph()"><span class="glyphicon glyphicon-zoom-out"></span></a>',
+            },
             'graphContainer': {
               templateUrl: 'dagre.html',
               controller: 'FlowPathGraphCtrl'

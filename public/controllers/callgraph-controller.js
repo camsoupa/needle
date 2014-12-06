@@ -42,11 +42,13 @@ angular.module('needle')
         /* transform graph into ui-friendly format (maybe should do this on server to begin with) */
         for (var caller in callers) {
           methods[caller] = {
-            name: caller, 
+            name: callers[caller].name, 
+            filename: callers[caller].filename,
             calls: callers[caller].calls.length, 
             called: 0, 
             signature: caller, 
-            risks: callers[caller].risks
+            risks: callers[caller].risks,
+            startLine: callers[caller].startLine
           }
         }
         
@@ -150,7 +152,7 @@ angular.module('needle')
             if(nodeId.substring(0,4) != 'leaf:') {
               updateGraph(nodeId);
               $rootScope.$broadcast('graph_updated');
-              // TODO risks need filename and line
+              $rootScope.$broadcast('callgraph_method_request', methods[nodeId], $stateParams.appName);
             }
           }
           $scope.onEdgeClick = function(edgeId) {

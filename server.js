@@ -38,7 +38,7 @@ var fileCache = {};
 app.get('/file?', function (req, res) {
   var app = req.query.app;
   var path = req.query.path;
-  if (app in fileCache) {
+  if (path in fileCache) {
     res.send(fileCache[path]);
   } else {
     path = path.replace('.java', '');
@@ -108,23 +108,42 @@ app.get('/manifest?', function (req, res) {
 
 var graphCache = {};
 
-app.get('/callgraph?', function (req, res) {
-  var app = req.query.app;
+function getCallGraph (app, callback) {
   if (app in graphCache) {
-    res.send(graphCache[app]);
+    callback(graphCache[app]);
   } else {
     // TODO: readdir recursively
-    s2js.getCallGraph('data/apps/compiled/' + app + '/', function (graph) {
+    s2js.getCallGraph(app, 'data/apps/compiled/' + app + '/', function (graph) {
       graphCache[app] = graph;
-      res.send(graph);
+      callback(graph);
     });
   }
+}
+
+app.get('/callgraph?', function (req, res) {
+  getCallGraph(req.query.app, function (graph) {
+    res.send(graph);
+  })
+  
 });
 
 app.get('/sourcesinks?', function (req, res) {
   var app = req.query.app;
-  s2js.getSourceSinkPaths('data/apps/sourcesinks/' + app + '.ss', function (graph) {
-    res.send(graph);
+  getCallGraph(app, function (cg) {
+    var path = 'data/apps/sourcesinks/' + app + '.ss';
+    s2js.getSourceSinkPaths(app, path, cg.files, function (graph) {
+      res.send(graph);
+    })
+  })
+});
+
+app.get('/cryptoflows?', function (req, res) {
+  var app = req.query.app;
+  getCallGraph(app, function (cg) {
+    var path = 'data/apps/cryptoflows/' + app + '.ss';
+    s2js.getSourceSinkPaths(app, path, cg.files, function (graph) {
+      res.send(graph);
+    })
   })
 });
 

@@ -101,7 +101,6 @@ var myapp = angular.module('needle')
         var methodSigs = prog.classes[clazz].methods;
         for (var i = 0; i < methodSigs.length; i ++) {
           var m = prog.methods[methodSigs[i]];
-          m.filename = pkg + '.' + prog.classes[clazz].file.replace('.java', '');
           m.signature = methodSigs[i];
           var method = { id: ++id, title: m.name, items: [], parent: classItem, data: m }
           if (m.risks) {

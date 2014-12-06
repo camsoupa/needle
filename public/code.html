@@ -9,7 +9,7 @@
     <div id="line-{{$index}}" 
          ng-repeat="line in file.lines" 
          class="source-code-line" 
-         ng-class="{ 'highlighted' : line.highlight }">
+         ng-class="{ 'highlighted' : line.highlight, 'source' : line.isSource, 'sink' : line.isSink }">
       <div ng-bind-html="line.html"></div>
     </div>
   </div>
