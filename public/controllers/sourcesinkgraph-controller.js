@@ -6,8 +6,10 @@ angular.module('needle')
       sourcesinks.get($stateParams.appName).then(function (response) {
         var paths = response.data;
         paths.forEach(function (path, index) {
-          var from = path[0].category + ' (SOURCE)';
-          var to = path[path.length-1].category + ' (SINK)';
+          var fromCat = path[0].category;
+          var toCat =   path[path.length-1].category;
+          var from = fromCat + ' (SOURCE)';
+          var to = toCat + ' (SINK)';
           
           if (from && !$scope.graph.hasNode(from)) {
             $scope.graph.addNode(from, { label: from /*, style: rootStyle */})
