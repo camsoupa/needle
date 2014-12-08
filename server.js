@@ -45,7 +45,10 @@ app.get('/file?', function (req, res) {
     fs.readFile('data/apps/source/' + app + '/src/' + path.replace(/\./g, '/') + '.java', 
       { encoding: 'utf-8' }, 
       function (err, data) { 
-        if (!!err) res.send({ filename: path, lines: [{ text: 'NO SOURCE', html: 'NO SOURCE'}] });
+        if (!!err) {
+          res.send({ filename: path, lines: [{ text: 'NO SOURCE', html: 'NO SOURCE'}] });
+          return;
+        }
         fileCache[path] = { filename: path, lines: syntaxHighlightCode('java', data) };
         res.send(fileCache[path]);
       });
