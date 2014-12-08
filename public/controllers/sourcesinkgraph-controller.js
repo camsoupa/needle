@@ -6,8 +6,8 @@ angular.module('needle')
       sourcesinks.get($stateParams.appName).then(function (response) {
         var paths = response.data;
         paths.forEach(function (path, index) {
-          var fromCat = path[0].category;
-          var toCat =   path[path.length-1].category;
+          var fromCat = path[0].category ? path[0].category[0] : '';
+          var toCat =   path[path.length-1].category ? path[path.length-1].category[0] : '';
           var from = fromCat + ' (SOURCE)';
           var to = toCat + ' (SINK)';
           
@@ -22,12 +22,12 @@ angular.module('needle')
             $scope.graph.addEdge(index, from, to);
           }
         })
-
-        $scope.onNodeClick = function(nodeId) {
-          console.log(nodeId);
-        }
-        $scope.onEdgeClick = function(edgeId) {
-          $state.go('app.content.flowpathgraph', { pathId: edgeId });
-        }
       })
+      
+      $scope.onNodeClick = function(nodeId) {
+        console.log(nodeId);
+      }
+      $scope.onEdgeClick = function(edgeId) {
+        $state.go('app.content.flowpathgraph', { pathId: edgeId });
+      }
     }])

@@ -118,7 +118,7 @@ angular.module('needle')
               if (!g.hasNode(leaf)) {
                 g.addNode(leaf, { 
                   label: !(callee.signature in callers) 
-                    ? 'EXTERNAL' : callers[callee.signature].calls.length.toString(), 
+                    ? 'EXTERNAL' : callers[callee.signature].calls.length.toString() + ' out edges' , 
                   style: placeholderNodeStyle 
                 });
                 g.addEdge(null, callee.signature, leaf);

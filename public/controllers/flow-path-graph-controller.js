@@ -3,6 +3,7 @@ angular.module('needle')
     function($state, $stateParams, $scope, $rootScope, $http, $timeout, sourcesinks) {
       console.log($stateParams);
       $scope.graph = new dagreD3.Digraph();
+      $scope.orient = "TB";
       
       sourcesinks.get($stateParams.appName).then(function (res) {
         var path = res.data[$stateParams.pathId];
@@ -21,5 +22,10 @@ angular.module('needle')
         $scope.onEdgeClick = function(edgeId) {
           console.log(edgeId);
         }
+        $timeout(function () {
+          $rootScope.$broadcast('graph_updated');
+          $scope.$apply();
+        }, 5);
+        
       })      
     }])

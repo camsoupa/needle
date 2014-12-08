@@ -1,6 +1,6 @@
 var myapp = angular.module('needle')
-  .controller('SidePanelCtrl', [ '$stateParams', '$scope', '$rootScope', 'report',
-    function($stateParams, $scope, $rootScope, report) {
+  .controller('SidePanelCtrl', [ '$stateParams', '$scope', '$rootScope', '$timeout', 'report',
+    function($stateParams, $scope, $rootScope, $timeout, report) {
     console.log($stateParams);
     // TODO make filterable with: https://github.com/ee/angular-ui-tree-filter
     $scope.pattern = '';
@@ -119,6 +119,8 @@ var myapp = angular.module('needle')
       for (var pkg in pkgs) {
         $scope.pkgs.push(pkgs[pkg]);
       }
-      $scope.$apply();
+      $timeout(function () {
+        $scope.$apply();
+      })
     })
    }])

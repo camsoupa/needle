@@ -43,6 +43,10 @@ function matchPathNode {
       stmt: stmt,
       line: ln
     }
+  },
+  x @ * => {
+    console.log(x);
+    throw "matchPathNode failed!";  
   }
 }
 
@@ -216,7 +220,7 @@ var onFilesDone = function (appName, classes, onComplete) {
           invoke.category = sources[invoke.signature].category;
           m.risks.push(invoke);
           if (!(invoke.line in files[m.file])) files[m.file][invoke.line] = [];
-          files[m.file][invoke.line].push(invoke);
+          files[m.file][invoke.line].push(invoke.category);
         }
         if (invoke.signature in sinks) {
 
@@ -226,7 +230,7 @@ var onFilesDone = function (appName, classes, onComplete) {
           m.risks.push(invoke);
           console.log(m.file);
           if (!(invoke.line in files[m.file])) files[m.file][invoke.line] = [];
-          files[m.file][invoke.line].push(invoke);
+          files[m.file][invoke.line].push(invoke.category);
         }
       })
     });
@@ -331,7 +335,14 @@ exports.getSourceSinkPaths = function (appName, path, files, callback) {
       var snk = path[path.length-1];
       console.log(src.filename);
       src.category = files[src.filename][src.line];
+      
+      if (src.category && src.category.length > 1) {
+        console.log(src.filename, src.line, src.category);
+      }
       snk.category = files[snk.filename][snk.line];
+      if (snk.category && snk.category.length > 1) {
+        console.log(snk.filename, snk.line, snk.category);
+      }
     });
     
     cachedSourceSinkPaths[appName] = paths;

@@ -5,7 +5,7 @@ angular.module('needle')
       var renderer = new dagreD3.Renderer();
       var layout = dagreD3.layout()
                           .nodeSep(20)
-                          .rankDir("LR");
+                          .rankDir(scope.d3Orientation || "LR");
       // Override drawNodes to set up the hover.
       var oldDrawNodes = renderer.drawNodes();
       renderer.drawNodes(function(g, svg) {
@@ -73,6 +73,7 @@ angular.module('needle')
           d3Graph: '=',
           d3NodeClick: '&',
           d3EdgeClick: '&',
+          d3Orientation: '='
       },
       template :'<div id="dagre">' + 
                    '<svg id="svg" height="600px" width="1000px"><g transform="translate(20,20)"></g></svg>' + 
