@@ -47,7 +47,7 @@ needle/
 
                     src/my/package/name/SomeClass.java
 
-                    Android.Manifest.xml
+                    AndroidManifest.xml
 
             compiled/    <-- contains the results of dex2sex (perhaps decompiled would be more clear)
 
