@@ -1,0 +1,25 @@
+#!/bin/sh
+if [ $# -eq 0 ]; then
+	echo "Disassemble an APK file to a directory contains S-Expression Represented Dalivk Bytecode" >&1
+	echo "Usage: $0 filename.apk [outputdir]" >&1
+	echo "This command will disassemble the APK file and produce the output to ouputdir, if outputdir is omitted the output will produced in current working directory" >&1
+	exit 1
+fi
+[ -z ${2} ] && BASEDIR=. || BASEDIR=$2
+JAVA=java
+UNZIP=unzip
+JAR=`dirname $0`/../bin/dex2sex.jar
+APK_FILE=${1}
+OUTPUT=${BASEDIR}/`basename "${1}" .apk`
+TMPDIR=/tmp/dex2sex/
+
+mkdir -p ${TMPDIR}
+${UNZIP} ${APK_FILE} classes.dex -d ${TMPDIR}
+mkdir -p ${OUTPUT}
+${JAVA} -jar ${JAR} -d ${OUTPUT} ${TMPDIR}/classes.dex
+rm ${TMPDIR}/classes.dex
+for i in `find ${OUTPUT} -name '*.sxddx'`
+do
+    sed 's/\[array .*\]\//java\/lang\/reflect\/Array\//g' $i > ${TMPDIR}/tmp.txt
+    mv ${TMPDIR}/tmp.txt $i
+done

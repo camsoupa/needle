@@ -42,7 +42,7 @@ app.get('/file?', function (req, res) {
     res.send(fileCache[path]);
   } else {
     path = path.replace('.java', '');
-    fs.readFile('data/apps/source/' + app + '/src/' + path.replace(/\./g, '/') + '.java', 
+    fs.readFile('apps/' + app + '/src/' + path.replace(/\./g, '/') + '.java', 
       { encoding: 'utf-8' }, 
       function (err, data) { 
         if (!!err) {
@@ -58,7 +58,7 @@ app.get('/file?', function (req, res) {
 var appsCache = {};
 
 app.get('/apps', function (req, res) {
-  var dir = 'data/apps/compiled/';
+  var dir = 'apps/';
   fs.readdir(dir, function (err, files) {
     var appNames = _.filter(files, function (file) {
                   return fs.statSync(dir + file).isDirectory();
@@ -87,7 +87,7 @@ app.get('/apps', function (req, res) {
 
 function readManifest(app, highlightCode, callback) {
   var filename = 'AndroidManifest.xml';
-  fs.readFile('data/apps/source/' + app + '/' + filename, { encoding: 'utf-8' }, 
+  fs.readFile('apps/' + app + '/' + filename, { encoding: 'utf-8' }, 
     function (err, data) { 
       if (!!err) throw err;
       var parser = new xml2js.Parser({ attrkey: 'attributes' });
@@ -116,7 +116,7 @@ function getCallGraph (app, callback) {
     callback(graphCache[app]);
   } else {
     // TODO: readdir recursively
-    s2js.getCallGraph(app, 'data/apps/compiled/' + app + '/', function (graph) {
+    s2js.getCallGraph(app, 'apps/' + app + '/dedex/', function (graph) {
       graphCache[app] = graph;
       callback(graph);
     });
@@ -133,7 +133,7 @@ app.get('/callgraph?', function (req, res) {
 app.get('/sourcesinks?', function (req, res) {
   var app = req.query.app;
   getCallGraph(app, function (cg) {
-    var path = 'data/apps/sourcesinks/' + app + '.ss';
+    var path = 'apps/' + app + '/' + app + '.dataflow';
     s2js.getSourceSinkPaths(app, path, cg.files, function (graph) {
       res.send(graph);
     })
@@ -143,7 +143,7 @@ app.get('/sourcesinks?', function (req, res) {
 app.get('/cryptoflows?', function (req, res) {
   var app = req.query.app;
   getCallGraph(app, function (cg) {
-    var path = 'data/apps/cryptoflows/' + app + '.ss';
+    var path = 'apps/' + app + '.cryptoflow';
     s2js.getSourceSinkPaths(app, path, cg.files, function (graph) {
       res.send(graph);
     })

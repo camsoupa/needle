@@ -2,6 +2,8 @@ needle README
 
 #Instructions:
 
+Problem exporting soot-infoflow-android jar: https://mailman.cs.mcgill.ca/pipermail/soot-list/2014-October/007421.html
+
 ##install nodejs
 
 get nodejs for your platform from http://nodejs.org/
