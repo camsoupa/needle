@@ -8,16 +8,18 @@ var proprietary = true //to include or not proprietary headers, default: true
 
 function dedex(apkPath, destPath, callback) {
   console.log('dedex', apkPath, destPath);
-  proc.spawn('./apk2s', [ apkPath, destPath], { cwd: './tools' });
-  proc.on('exit', function (code, signal) {
+  var child = proc.spawn('./apk2s', [ apkPath, destPath], { cwd: './tools' });
+  child.on('exit', function (code, signal) {
+    console.log(code, signal);
     callback(code != 0 ? code : null);  
   })
 }
 
 function infoflow(apkPath, destPath, callback) {
   console.log('infoflow', apkPath, destPath);
-  proc.spawn('./infoflow', [ apkPath, destPath], { cwd: './tools' });
-  proc.on('exit', function (code, signal) {
+  var child = proc.spawn('./infoflow', [ apkPath, destPath], { cwd: './tools' });
+  child.on('exit', function (code, signal) {
+    console.log(code, signal);
     callback(code != 0 ? code : null);  
   })
 }

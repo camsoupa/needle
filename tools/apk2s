@@ -7,8 +7,6 @@ if [ $# -eq 0 ]; then
 fi
 [ -z ${2} ] && BASEDIR=. || BASEDIR=$2
 
-pushd tools
-
 JAVA=java
 UNZIP=unzip
 JAR=dex2sex.jar
@@ -27,4 +25,3 @@ do
     mv ${TMPDIR}/tmp.txt $i
 done
 
-popd
