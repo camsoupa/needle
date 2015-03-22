@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -ex
+
+if [ $# -eq 0 ]; then
+	echo "Runs flow droid on an apk and stores results in a destination directory" >&1
+	echo "Usage: $0 filename.apk [outputdir]" >&1
+	echo "This command will disassemble the APK file and produce the output to ouputdir, if outputdir is omitted the output will produced in current working directory" >&1
+	exit 1
+fi
+[ -z ${2} ] && BASEDIR=. || BASEDIR=$2
+JAVA=java
+
+pushd tools
+
+JAR=infoflow-android.jar
+APK_FILE=${1}
+OUTPUT=${BASEDIR}/`basename "${1}" .apk`
+ANDROID_PLATFORMS=../../android-sdk/platforms
+
+# consider adding other arguments
+${JAVA} -jar ${JAR} ${APK_FILE} ${ANDROID_PLATFORMS} --pathalgo contextsensitive --aplength 100 --sources ../data/sources_list --sinks ../data/sinks_list
+
+popd

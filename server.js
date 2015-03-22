@@ -1,10 +1,12 @@
 var fs = require('fs'),
+    readDir = require('readdir'),
     proc = require('child_process'),
     express = require('express'),
     hl = require('highlight.js'),
     _  = require('lodash'),
     fs = require('fs'),
-    s2js = require('./compiled/_s2js.js'),
+    /* TODO make this a build rule in package.json, or a separate node_module entirely */
+    s2js = require('./bin/_s2js.js'),
     xml2js = require('xml2js');
 
 var port = 3000;
@@ -42,7 +44,7 @@ app.get('/file?', function (req, res) {
     res.send(fileCache[path]);
   } else {
     path = path.replace('.java', '');
-    fs.readFile('apps/' + app + '/src/' + path.replace(/\./g, '/') + '.java', 
+    fs.readFile('apps/' + app + '/' + app.split('-')[0] + '/src/' + path.replace(/\./g, '/') + '.java', 
       { encoding: 'utf-8' }, 
       function (err, data) { 
         if (!!err) {
@@ -61,8 +63,8 @@ app.get('/apps', function (req, res) {
   var dir = 'apps/';
   fs.readdir(dir, function (err, files) {
     var appNames = _.filter(files, function (file) {
-                  return fs.statSync(dir + file).isDirectory();
-                });
+      return fs.statSync(dir + file).isDirectory();
+    });
     var readNextManifest = function (results) {
       if(!results) results = [];
       if (appNames.length > 0) {
@@ -87,7 +89,8 @@ app.get('/apps', function (req, res) {
 
 function readManifest(app, highlightCode, callback) {
   var filename = 'AndroidManifest.xml';
-  fs.readFile('apps/' + app + '/' + filename, { encoding: 'utf-8' }, 
+  /* some folder structures are of form Vermilion-update3/Vermilion/AndroidManifest.xml */
+  fs.readFile('apps/' + app + '/' + app,split('-')[0] + '/' + filename, { encoding: 'utf-8' }, 
     function (err, data) { 
       if (!!err) throw err;
       var parser = new xml2js.Parser({ attrkey: 'attributes' });
@@ -131,19 +134,30 @@ app.get('/callgraph?', function (req, res) {
 });
 
 app.get('/sourcesinks?', function (req, res) {
-  var app = req.query.app;
+  var appPath = 'apps/' + req.query.app + '/';
   getCallGraph(app, function (cg) {
-    var path = 'apps/' + app + '/' + app + '.dataflow';
-    s2js.getSourceSinkPaths(app, path, cg.files, function (graph) {
-      res.send(graph);
-    })
+    /* TODO name file by a convention - consider apps with AppName-update#/AppName-debug.apk anomolies */
+    readDir.read(appPath, [ '**.infoflow' ], function (err, files) {
+      if (err) {
+        console.log(err);
+        // this may be reasonable but needs a warning of some kind
+        //res.send(cg);
+      } else { 
+        s2js.getSourceSinkPaths(app, appPath + files[0], cg.files, function (graph) {
+          res.send(graph);
+        })
+      }
+    }
   })
 });
 
+/* UNIMPLEMENTED */
 app.get('/cryptoflows?', function (req, res) {
   var app = req.query.app;
   getCallGraph(app, function (cg) {
-    var path = 'apps/' + app + '.cryptoflow';
+    /* this path may be incorrect */ 
+    var path = 'apps/' + app + '/' + app + '.cryptoflow';
+
     s2js.getSourceSinkPaths(app, path, cg.files, function (graph) {
       res.send(graph);
     })

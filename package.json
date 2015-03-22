@@ -20,7 +20,9 @@
     "sparkler" : "*",
     "recursive-readdir" : "1.2.0",
     "sexpression" : "git+https://github.com/camsoupa/sexpression.git#master",
-    "xml2js" : "0.4.4"
+    "xml2js" : "0.4.4",
+    "tarball-extract" : "*",
+    "readdir" : "*"
   },
   "license": "MIT"
 }

@@ -3,6 +3,7 @@ needle README
 #Instructions:
 
 Problem exporting soot-infoflow-android jar: https://mailman.cs.mcgill.ca/pipermail/soot-list/2014-October/007421.html
+Edit ant.settings in soot-inflow-android project to be able to build a jar
 
 ##install nodejs
 
