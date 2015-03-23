@@ -349,17 +349,17 @@ exports.getSourceSinkPaths = function (appName, path, files, callback) {
     callback(paths);
   })  
 }
+
 exports.getCallGraph = function (appName, path, callback) {
+  console.log('getCallGraph', appName, path);
   find(path, function (err, files) {
-    if(!!err) throw err;
+    if(!!err) { throw err; }
     
     /* filter out android support lib files */
-	  var appFiles = _.filter(files, function (f) {
-			return f.indexOf('android/support') == -1;
-		})
-
+    var appFiles = _.filter(files, function (f) {
+      return f.indexOf('android/support') == -1;
+    })
     processFiles(appName, appFiles, null, callback);
   })
 }
-
 

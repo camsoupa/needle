@@ -7,6 +7,9 @@
     "type": "git",
     "url": "https://github.com/camsoupa/needle.org"
   },
+  "scripts": {
+    "postinstall" : "sjs -m sparkler/macros s2js.sjs > bin/s2js.js"
+  },
   "bugs": {
     "url": "https://github.com/camsoupa/needle.org/issues"
   },
@@ -14,9 +17,11 @@
     "highlight.js": "8.3",
     "lodash": "2.4.1",
     "express": "4.9.7",
+    "morgan": "1.5.2",
     "socket.io": "*",
     "dagre-d3" : "*",
     "d3" : "*",
+    "sweet.js": "*",
     "sparkler" : "*",
     "recursive-readdir" : "1.2.0",
     "sexpression" : "git+https://github.com/camsoupa/sexpression.git#master",
