@@ -61,7 +61,7 @@ angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', '
           }
         })
         .state('app.content.ssgraph', {
-          url: '',
+          url: 'sourcesinkgraph',
           views: {
             'graphContainer': {
               templateUrl: 'dagre.html',
@@ -70,7 +70,7 @@ angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', '
           }
         })
         .state('app.content.callgraph', {
-          url: '/callgraph',
+          url: '',
           views: {
             'graphContainer': {
               templateUrl: 'dagre.html',
