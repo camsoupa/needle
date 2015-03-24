@@ -8,7 +8,7 @@
     "url": "https://github.com/camsoupa/needle.org"
   },
   "scripts": {
-    "postinstall" : "sjs -m sparkler/macros s2js.sjs > bin/s2js.js"
+    "postinstall": "sjs -m sparkler/macros matchers.sjs > bin/matchers.js"
   },
   "bugs": {
     "url": "https://github.com/camsoupa/needle.org/issues"
@@ -19,15 +19,18 @@
     "express": "4.9.7",
     "morgan": "1.5.2",
     "socket.io": "*",
-    "dagre-d3" : "*",
-    "d3" : "*",
+    "dagre-d3": "*",
+    "d3": "*",
     "sweet.js": "*",
-    "sparkler" : "*",
-    "recursive-readdir" : "1.2.0",
-    "sexpression" : "git+https://github.com/camsoupa/sexpression.git#master",
-    "xml2js" : "0.4.4",
-    "tarball-extract" : "*",
-    "readdir" : "*"
+    "sparkler": "*",
+    "recursive-readdir": "1.2.0",
+    "sexpression": "git+https://github.com/camsoupa/sexpression.git#master",
+    "xml2js": "0.4.4",
+    "tarball-extract": "*",
+    "readdir": "*"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "jasmine": "^2.2.1"
+  }
 }

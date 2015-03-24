@@ -7,7 +7,8 @@ var fs = require('fs'),
     _  = require('lodash'),
     fs = require('fs'),
     /* TODO make this a build rule in package.json, or a separate node_module entirely */
-    s2js = require('./bin/s2js.js'),
+    callgraph = require('./callgraph'),
+    getSourceSinkPaths = require('./infoflow').getSourceSinkPaths,
     xml2js = require('xml2js');
 
 var port = 3000;
@@ -121,7 +122,7 @@ function getCallGraph (appName, callback) {
     callback(graphCache[appName]);
   } else {
     // TODO: readdir recursively
-    s2js.getCallGraph(appName, 'apps/' + appName + '/dedex/', function (graph) {
+    callgraph.getCallGraph(appName, 'apps/' + appName + '/dedex/', function (graph) {
       graphCache[appName] = graph;
       callback(graph);
     });
@@ -149,7 +150,7 @@ app.get('/sourcesinks?', function (req, res) {
         /* no infoflow results */
         res.send(graph);
       } else { 
-        s2js.getSourceSinkPaths(appName, appPath + files[0], cg.files, function (graph) {
+        getSourceSinkPaths(appName, appPath + files[0], cg.files, function (graph) {
           res.send(graph);
         })
       }
