@@ -9,7 +9,8 @@ var fs = require('fs'),
     /* TODO make this a build rule in package.json, or a separate node_module entirely */
     callgraph = require('./callgraph'),
     getSourceSinkPaths = require('./infoflow').getSourceSinkPaths,
-    xml2js = require('xml2js');
+    xml2js = require('xml2js'),
+    search = require('./search').search;
 
 var port = 3000;
 var app = express();
@@ -38,6 +39,10 @@ app.get('/', function(req, res){
 });
 
 var fileCache = {};
+
+app.get('/search?', function (req, res) {
+
+})
 
 /* /file?app=Memotis&path=org.memotis.Crypto */
 app.get('/file?', function (req, res) {
@@ -169,28 +174,17 @@ app.get('/sourcesinks?', function (req, res) {
 var io = require('socket.io').listen(app.listen(port));
 
 io.sockets.on('connection', function (socket) {
-  var child = proc.spawn('../adam/bin/adb');
-
-  child.stdout.on('data', function (data) {
-    setTimeout(function () {
-      socket.emit('stdout', data); 
-    }, 100);
-  });
-
-  child.stderr.on('data', function (data) {
-    socket.emit('stderr', data);
-  });
- 
-  socket.on('command', function (cmd) {
-    child.stdin.write(cmd);  
+  socket.on('search', function (req) {
+    var appName = req.app;
+    var query = req.query;
+    var path = 'apps/' + appName + '/' + appName.split('-')[0] + '/src/';
+    search(path, query, 
+      function (data) { socket.emit('search_results', data); },
+      function (error) { socket.emit('error', error); },
+      function () { socket.emit('done'); });
   });
   console.log('connected');
 })
 
 console.log('listening on port 3000');
 
-/*
-process.stdin.on('data', function (key) {
-  child.stdin.write(key);
-})
-*/

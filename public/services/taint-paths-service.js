@@ -7,13 +7,4 @@ angular.module('needle')
         }
       }
     }])
-/*
-angular.module('needle')
-  .factory('sourcesinks', function () { 
-     return {
-        get: function () {
-         
-        }
-     }
-  })
-  */
+

@@ -30,11 +30,16 @@ angular.module('needle', [ 'ui.router', 'ui.tree', 'angucomplete', 'ui.layout', 
           abstract: true,
           views: {
            'breadcrumb': {
-              template: '<ol class="breadcrumb"><li>' + 
-                 '<a href="/" class="text-danger"><b>apps</b></a></li>' + 
-                 '<li class="text-primary"><b>{{appName}}</b></li></ol>',
-              controller: [ '$scope', '$stateParams', function ($scope, $stateParams) {
+              templateUrl: 'app.header.html',
+              controller: [ '$scope', '$rootScope', '$stateParams', 'search', function ($scope, $rootScope, $stateParams, search) {
                 $scope.appName = $stateParams.appName;
+                $scope.query = function () { 
+                  search.search({ query: $scope.searchText, app: $scope.appName }, function (data) {
+                    console.log(data);
+                    $rootScope.$broadcast('search_results', data);
+                  });
+                }
+                $scope.clear = function () { $scope.searchText = ''; }
               }]
             },
             '' : {
