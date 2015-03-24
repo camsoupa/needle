@@ -16,5 +16,5 @@ OUTPUT=${2}
 ANDROID_PLATFORMS=../../android-sdk/platforms
 
 # consider adding other arguments
-${JAVA} -jar ${JAR} ${APK_FILE} ${ANDROID_PLATFORMS} --pathalgo contextsensitive --aplength 100 --sources ../data/sources_list --sinks ../data/sinks_list
+${JAVA} -jar ${JAR} ${APK_FILE} ${ANDROID_PLATFORMS} --pathalgo contextsensitive --aplength 20 --sources ../data/sources_list --sinks ../data/sinks_list
 mv out.infoflow ${OUTPUT}

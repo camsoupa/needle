@@ -28,6 +28,6 @@ angular.module('needle')
         console.log(nodeId);
       }
       $scope.onEdgeClick = function(edgeId) {
-        $state.go('app.content.flowpathgraph', { pathId: edgeId });
+        $state.go('apps.detail.content.flowpathgraph', { pathId: edgeId });
       }
     }])

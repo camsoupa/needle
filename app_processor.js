@@ -19,11 +19,12 @@ function dedex(apkPath, destPath, callback) {
 function infoflow(apkPath, destPath, callback) {
   console.log('infoflow', apkPath, destPath);
   /** infofow require the stdio to be hooked up or does not terminate */
-  var child = spawn('./infoflow', [ apkPath, destPath], { stdio: 'inherit', cwd: './tools' });
-  child.on('close', function (code, signal) {
-    console.log(code, signal);
-    callback(code != 0 ? code : null);  
-  })
+//  var child = spawn('./infoflow', [ apkPath, destPath], { stdio: 'inherit', cwd: './tools' });
+//  child.on('close', function (code, signal) {
+//    console.log(code, signal);
+//    callback(code != 0 ? code : null);  
+//  })
+  callback();
 }
 
 function processAppTarball(tarPath, appsRootDir, onProgress, onDone) {

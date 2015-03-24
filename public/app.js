@@ -1,4 +1,4 @@
-angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', 'ngSanitize', 'ui.bootstrap'])
+angular.module('needle', [ 'ui.router', 'ui.tree', 'angucomplete', 'ui.layout', 'ngSanitize', 'ui.bootstrap'])
   .run([     '$rootScope', '$state', '$stateParams', '$anchorScroll',
     function ($rootScope,   $state,   $stateParams, $anchorScroll) {
       $rootScope.$state = $state;
@@ -10,7 +10,7 @@ angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', '
     function ($logProvider, $stateProvider,   $urlRouterProvider) {
       $logProvider.debugEnabled(true);
       $stateProvider
-        .state('apps',  {
+        .state('appslist',  {
           url: '',
           views: {
            'breadcrumb': {
@@ -31,7 +31,7 @@ angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', '
           views: {
            'breadcrumb': {
               template: '<ol class="breadcrumb"><li>' + 
-                 '<a ui-sref="apps" class="text-danger"><b>apps</b></a></li>' + 
+                 '<a ui-sref="appslist()" class="text-danger"><b>apps</b></a></li>' + 
                  '<li class="text-primary"><b>{{appName}}</b></li></ol>',
               controller: [ '$scope', '$stateParams', function ($scope, $stateParams) {
                 $scope.appName = $stateParams.appName;
@@ -61,7 +61,7 @@ angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', '
           }
         })
         .state('app.content.ssgraph', {
-          url: '',
+          url: '/ssgraph',
           views: {
             'graphContainer': {
               templateUrl: 'dagre.html',
@@ -70,20 +70,11 @@ angular.module('needle', ['ui.router', 'ui.tree', 'angucomplete', 'ui.layout', '
           }
         })
         .state('app.content.callgraph', {
-          url: '/callgraph',
+          url: '',
           views: {
             'graphContainer': {
               templateUrl: 'dagre.html',
               controller: 'CallGraphCtrl'
-            }
-          }
-        })
-        .state('app.content.cryptograph', {
-          url: '/crypto-graph',
-          views: {
-            'graphContainer': {
-              templateUrl: 'dagre.html',
-              controller: 'CryptoGraphCtrl'
             }
           }
         })
