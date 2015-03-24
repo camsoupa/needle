@@ -43,20 +43,27 @@ var fileCache = {};
 app.get('/file?', function (req, res) {
   var appName = req.query.app;
   var path = req.query.path;
-  if (path in fileCache) {
+  if (!path) {
+    res.send({ filename: path, lines: [{ text: 'No Source =(', html: 'No Source =('}] });
+  } else if (path in fileCache) {
     res.send(fileCache[path]);
   } else {
-    path = path.replace('.java', '');
-    fs.readFile('apps/' + appName + '/' + appName.split('-')[0] + '/src/' + path.replace(/\./g, '/') + '.java', 
-      { encoding: 'utf-8' }, 
-      function (err, data) { 
-        if (!!err) {
-          res.send({ filename: path, lines: [{ text: 'NO SOURCE', html: 'NO SOURCE'}] });
-          return;
-        }
-        fileCache[path] = { filename: path, lines: syntaxHighlightCode('java', data) };
-        res.send(fileCache[path]);
-      });
+    path = path.replace('.java', '').replace('.sxddx', '');
+    if (!path.indexOf('/_no_source/')) {
+      path = path.replace('/_no_source', '');
+      path = 'apps/' + appName + '/dedex/' + appName.split('-')[0] + path.replace(/\./g, '/') + '.sxddx';
+    } else {
+      path = 'apps/' + appName + '/' + appName.split('-')[0] + '/src/' + path.replace(/\./g, '/') + '.java';
+    } 
+
+    fs.readFile(path, { encoding: 'utf-8' }, function (err, data) { 
+      if (!!err) {
+        res.send({ filename: req.query.path, lines: [{ text: path, html: path }] });
+        return;
+      }
+      fileCache[path] = { filename: path, lines: syntaxHighlightCode('java', data) };
+      res.send(fileCache[path]);
+    });
   }
 });
 

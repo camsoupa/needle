@@ -115,7 +115,7 @@ function processFiles(appName, files, classes, cb) {
     console.log(_.last(files));
     fs.readFile(files.pop(), { encoding: 'utf-8' }, function (err, data) {
       var clazz = matchers.matchClass(parse(data));
-      if (!clazz) {
+      if (clazz == null) {
         console.log(data);
         console.log("Failed to match class");
       } else {
@@ -136,7 +136,7 @@ exports.getCallGraph = function (appName, path, callback) {
     
     /* filter out android support lib files */
     var appFiles = _.filter(files, function (f) {
-      return f.indexOf('android/support') == -1;
+      return f.indexOf('android/support') == -1 && f.indexOf('com/google/') == -1;
     })
     processFiles(appName, appFiles, null, callback);
   })

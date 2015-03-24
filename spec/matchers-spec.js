@@ -1,16 +1,17 @@
-var matchClass = require('../bin/matchers').matchClass,
+var fs = require('fs'),
+    readDir = require('readdir'),
+    matchClass = require('../bin/matchers').matchClass,
     parse = require('sexpression').parse;
 
 describe('matchClass', function () {
-  it('should match an interface with no attached source', function () {
-    var sexpr = parse(
-       "(interface (attrs public abstract ) com/google/android/gms/games/multiplayer/realtime/RealTimeMessageReceivedListener" + 
-       "    (super java/lang/Object)" + 
-       "(method (attrs public abstract ) onRealTimeMessageReceived([object com/google/android/gms/games/multiplayer/realtime/RealTimeMessage] )void" + 
-       ")\n" + 
-       "\n" +
-       ")")
-    var clazz = matchClass(sexpr);
-    expect(clazz).not.toBe(null);
-  })
+  it('should match a class/interface', function () {
+    var sxddxDir = 'spec/sxddx/';
+    var files = readDir.readSync(sxddxDir, [ '**.sxddx' ])
+    expect(files.length).not.toBe(0);
+    files.forEach(function (file) {
+      console.log("test parsing:", file);
+      var contents = fs.readFileSync(sxddxDir + file,  { encoding: 'utf-8' });
+      expect(matchClass(parse(contents))).not.toBe(null);
+    })
+  })   
 })

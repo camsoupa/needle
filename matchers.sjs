@@ -112,40 +112,31 @@ function matchMethodDef {
   * => null
 }
 
+function buildClass(type, attrs, path, filename, parent, members) {
+  var clazz = path.replace(/\//g, '.');
+  var parent = parent.replace(/\//g, '.');
+  return {
+    type: type,
+    file: filename,
+    name: clazz,
+    parent: parent,
+    attrs: _.map(attrs, S.getSymbolName),
+    methods: _.chain(members)
+      .map(matchMethodDef)
+      .filter(NOT_NULL)
+      .map(function (m) { m.clazz = clazz; m.filename = filename; return m; })
+      .value()
+  }
+}
+
 function matchClass {
   [S(type), [S('attrs'), ...attrs], S(path), [S('super'), S(parent)], [S('source'), file], ...members]  
     if (type == 'class' || type == 'interface') => {
-      clazz = path.replace(/\//g, '.');
-      parent = parent.replace(/\//g, '.');
-      filename = path.split('$')[0];
-      return {
-        type: type,
-        file: filename,
-        name: clazz,
-        parent: parent,
-        attrs: _.map(attrs, S.getSymbolName),
-        methods: _.chain(members)
-                  .map(matchMethodDef)
-                  .filter(NOT_NULL)
-                  .map(function (m) { m.clazz = clazz; m.filename = filename; return m; })
-                  .value()
-      };
+      return buildClass(type, attrs, path, path.split('$')[0], parent, members)
   },
   [S(type), [S('attrs'), ...attrs], S(path), [S('super'), S(parent)], ...members]  
     if (type == 'class' || type == 'interface') => {
-      clazz = path.replace(/\//g, '.');
-      parent = parent.replace(/\//g, '.');
-      return {
-        type: type,
-        name: clazz,
-        parent: parent,
-        attrs: _.map(attrs, S.getSymbolName),
-        methods: _.chain(members)
-                  .map(matchMethodDef)
-                  .filter(NOT_NULL)
-                  .map(function (m) { m.clazz = clazz; return m; })
-                  .value()
-      };
+      return buildClass(type, attrs, '/_no_source/' + path, '/_no_source/' + path, parent, members)
   }, 
   * => null
 }

@@ -1,0 +1,6 @@
+(interface (attrs public abstract ) com/google/android/gms/games/multiplayer/realtime/RealTimeMessageReceivedListener
+           (super java/lang/Object)
+       (method (attrs public abstract ) onRealTimeMessageReceived([object com/google/android/gms/games/multiplayer/realtime/RealTimeMessage] )void
+       )
+       
+       )
